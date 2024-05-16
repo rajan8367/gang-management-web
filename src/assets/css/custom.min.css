@@ -6,3 +6,21 @@
 .customDropdown{
 	position: absolute; inset: 0px 0px auto auto; margin: 0px; transform: translate(0px, 23px);
 }
+.white-text{
+	color: #FFF;
+	margin-bottom: 50px;
+}
+.carousel-control-prev, .carousel-control-next{ display: none;}
+.popupLoader{
+    position: fixed;
+    left: 0px;
+    padding: 8px 12px;
+    width: 100%;
+    z-index: 11;
+    background-color: rgba(0, 0, 0, 0.2);
+    bottom: 0px;
+    top: 0px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

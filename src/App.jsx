@@ -1,17 +1,17 @@
 import Dashboard from "./Pages/Private/Dashboard";
 import { Route, Routes, useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import PageTitle from "./Component/PageTitle";
-import { AppProvider } from "./hooks/userContext";
+import { AppProvider, useUserContext } from "./hooks/userContext";
 import Login from "./Pages/public/Login";
 import ComplaintList from "./Pages/Private/ComplaintList";
 import ComplaintDetail from "./Pages/Private/ComplaintDetail";
 import ShutdownList from "./Pages/Private/Shutdown-list";
 import ComplaintTracking from "./Pages/Private/ComplaintTracking";
+import ContentHolder from "./Component/ContentHolder";
 
 function App() {
   const { pathname } = useLocation();
-
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
@@ -73,6 +73,7 @@ function App() {
           }
         />
       </Routes>
+      <ContentHolder />
     </AppProvider>
   );
 }

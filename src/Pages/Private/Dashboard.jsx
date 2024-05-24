@@ -2,7 +2,85 @@ import { PieChart } from "@mui/x-charts";
 import map from "./../../assets/images/Map.png";
 import { BarChart } from "@mui/x-charts/BarChart";
 import Layout from "../../Component/Layout";
+import { useUserContext } from "../../hooks/userContext";
+import { useEffect, useState } from "react";
+import { apiUrl } from "../../Constant";
+import moment from "moment";
+import Loader from "../../Component/Loader";
 function Dashboard() {
+  const { user } = useUserContext();
+  const [greet, setGreet] = useState("");
+  const [token, setToken] = useState();
+  const [complaint, setComplaint] = useState(null);
+  function formatDate(dateString) {
+    // Parse the date string using Moment.js
+    const date = moment(dateString);
+
+    // Format the date
+    return date.format("DD MMM YY");
+  }
+  useEffect(() => {
+    setGreet(getGreeting());
+    const authToken = localStorage.getItem("token");
+    const userData = localStorage.getItem("userData");
+    if (userData !== null) {
+      const userId = JSON.parse(userData)._id;
+      setToken(authToken);
+      fetchComplaint(userId);
+    }
+  }, []);
+
+  const fetchComplaint = (userId) => {
+    function json(response) {
+      return response.json();
+    }
+    fetch(apiUrl + "get-complains", {
+      method: "post",
+      headers: {
+        "Content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+      },
+      body: "userID=" + userId,
+    })
+      .then(json)
+      .then(function (response) {
+        console.log(response);
+        return;
+        if (response.status == "200") {
+          setComplaint(response);
+        } else {
+          alert(response.message);
+        }
+      })
+      .catch(function (error) {
+        console.error(error);
+      });
+  };
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) {
+      return "Good Morning";
+    } else if (hour < 18) {
+      return "Good Afternoon";
+    } else {
+      return "Good Evening";
+    }
+  };
+
+  /* const getMonthFromDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleString("default", { month: "short" });
+  };
+  
+  const complaintsByMonth = data.reduce((acc, complaint) => {
+    const month = getMonthFromDate(complaint.registration_date);
+    acc[month] = (acc[month] || 0) + 1;
+    return acc;
+  }, {});
+  
+  const months = Object.keys(complaintsByMonth);
+  const complaintCounts = Object.values(complaintsByMonth); */
+  if (complaint === null) return <Loader />;
   return (
     <Layout>
       <div className="page-content">
@@ -11,7 +89,6 @@ function Dashboard() {
             <div className="col-12">
               <div className="page-title-box d-sm-flex align-items-center justify-content-between">
                 <h4 className="mb-sm-0">Dashboard</h4>
-
                 <div className="page-title-right">
                   <ol className="breadcrumb m-0">
                     <li className="breadcrumb-item">
@@ -32,9 +109,15 @@ function Dashboard() {
                     <div className="d-flex align-items-lg-center flex-lg-row flex-column">
                       <div className="flex-grow-1">
                         <h4 className="fs-16 mb-1">
-                          Good Morning, Mr Sanjeev Kumar Mishra!
+                          {greet}, {user?.name}!
                         </h4>
-                        <p className="text-muted mb-0">XEN (LUCKNOW)</p>
+                        <p className="text-muted mb-0">
+                          {user?.type} (
+                          {user?.addresses && user.addresses.length > 0
+                            ? user.addresses[0].city
+                            : ""}
+                          )
+                        </p>
                       </div>
                       <div className="mt-3 mt-lg-0">
                         <form action="#">
@@ -73,8 +156,8 @@ function Dashboard() {
                           </div>
                           <div className="flex-shrink-0">
                             <h5 className="text-success fs-14 mb-0">
-                              <i className="ri-arrow-right-up-line fs-13 align-middle"></i>{" "}
-                              +16.24 %
+                              {/* <i className="ri-arrow-right-up-line fs-13 align-middle"></i>{" "}
+                              +16.24 % */}
                             </h5>
                           </div>
                         </div>
@@ -82,7 +165,7 @@ function Dashboard() {
                           <div>
                             <h4 className="fs-22 fw-semibold ff-secondary mb-4">
                               <span className="counter-value" data-target="559">
-                                599
+                                {complaint.totalComplain}
                               </span>{" "}
                             </h4>
                             <a
@@ -112,8 +195,8 @@ function Dashboard() {
                           </div>
                           <div className="flex-shrink-0">
                             <h5 className="text-danger fs-14 mb-0">
-                              <i className="ri-arrow-right-down-line fs-13 align-middle"></i>{" "}
-                              -3.57 %
+                              {/* <i className="ri-arrow-right-down-line fs-13 align-middle"></i>{" "}
+                              -3.57 % */}
                             </h5>
                           </div>
                         </div>
@@ -121,7 +204,7 @@ function Dashboard() {
                           <div>
                             <h4 className="fs-22 fw-semibold ff-secondary mb-4">
                               <span className="counter-value" data-target="368">
-                                368
+                                {complaint.totalApproved}
                               </span>
                             </h4>
                             <a
@@ -146,13 +229,13 @@ function Dashboard() {
                         <div className="d-flex align-items-center">
                           <div className="flex-grow-1 overflow-hidden">
                             <p className="text-uppercase fw-medium text-muted text-truncate mb-0">
-                              Shutdown Requests
+                              Pending Request
                             </p>
                           </div>
                           <div className="flex-shrink-0">
                             <h5 className="text-success fs-14 mb-0">
-                              <i className="ri-arrow-right-up-line fs-13 align-middle"></i>{" "}
-                              +29.08 %
+                              {/* <i className="ri-arrow-right-up-line fs-13 align-middle"></i>{" "}
+                              +29.08 % */}
                             </h5>
                           </div>
                         </div>
@@ -160,7 +243,7 @@ function Dashboard() {
                           <div>
                             <h4 className="fs-22 fw-semibold ff-secondary mb-4">
                               <span className="counter-value" data-target="66">
-                                66
+                                {complaint?.totalPending}
                               </span>{" "}
                             </h4>
                             <a href="#" className="text-decoration-underline">
@@ -183,18 +266,18 @@ function Dashboard() {
                           <div className="flex-grow-1 overflow-hidden">
                             <p className="text-uppercase fw-medium text-muted text-truncate mb-0">
                               {" "}
-                              Complaint Pending
+                              Complaint Rejected
                             </p>
                           </div>
-                          <div className="flex-shrink-0">
+                          {/* <div className="flex-shrink-0">
                             <h5 className="text-muted fs-14 mb-0">+0.01 %</h5>
-                          </div>
+                          </div> */}
                         </div>
                         <div className="d-flex align-items-end justify-content-between mt-4">
                           <div>
                             <h4 className="fs-22 fw-semibold ff-secondary mb-4">
                               <span className="counter-value" data-target="165">
-                                165
+                                {complaint?.totalRejected}
                               </span>
                             </h4>
                             <a
@@ -215,20 +298,20 @@ function Dashboard() {
                   </div>
                 </div>
                 <div className="row">
-                  <div className="col-xl-8">
+                  <div className="col-xl-12">
                     <div className="card">
                       <div className="card-header border-0 align-items-center d-flex">
                         <h4 className="card-title mb-0 flex-grow-1">
                           Complaints Status
                         </h4>
                         <div>
-                          <button
+                          {/* <button
                             type="button"
                             className="btn btn-soft-secondary btn-sm"
                           >
                             ALL
-                          </button>
-                          <button
+                          </button> */}
+                          {/* <button
                             type="button"
                             className="btn btn-soft-secondary btn-sm"
                           >
@@ -245,10 +328,10 @@ function Dashboard() {
                             className="btn btn-soft-primary btn-sm"
                           >
                             1Y
-                          </button>
+                          </button> */}
                         </div>
                       </div>
-                      <div className="card-header p-0 border-0 bg-soft-light">
+                      {/* <div className="card-header p-0 border-0 bg-soft-light">
                         <div className="row g-0 text-center">
                           <div className="col-6 col-sm-3">
                             <div className="p-3 border border-dashed border-start-0">
@@ -303,7 +386,7 @@ function Dashboard() {
                             </div>
                           </div>
                         </div>
-                      </div>
+                      </div> */}
                       <div className="card-body p-0 pb-2">
                         <div className="w-100">
                           {/* <div
@@ -312,43 +395,27 @@ function Dashboard() {
                               className="apex-charts"
                               dir="ltr"
                             ></div> */}
-                          <BarChart
+                          {/* <BarChart
                             xAxis={[
                               {
                                 id: "barCategories",
-                                data: [
-                                  "Jan",
-                                  "Feb",
-                                  "March",
-                                  "Apr",
-                                  "May",
-                                  "Jun",
-                                  "Jul",
-                                  "Aug",
-                                  "Sep",
-                                  "Oct",
-                                  "Nov",
-                                  "Dec",
-                                ],
+                                data: months,
                                 scaleType: "band",
                               },
                             ]}
                             series={[
                               {
-                                data: [
-                                  20, 50, 30, 20, 50, 30, 20, 50, 30, 20, 50,
-                                  30,
-                                ],
+                                data: complaintCounts,
                               },
                             ]}
-                            width={650}
+                            width={1050}
                             height={350}
-                          />
+                          /> */}
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div className="col-xl-4">
+                  {/* <div className="col-xl-4">
                     <div className="card ">
                       <div className="card-header align-items-center d-flex">
                         <h4 className="card-title mb-0 flex-grow-1">
@@ -374,17 +441,17 @@ function Dashboard() {
                         />
                       </div>
                     </div>
-                  </div>
+                  </div> */}
                 </div>
 
                 <div className="row">
-                  <div className="col-xl-8">
+                  <div className="col-xl-12">
                     <div className="card">
                       <div className="card-header align-items-center d-flex">
                         <h4 className="card-title mb-0 flex-grow-1">
                           Complaints In Progress
                         </h4>
-                        <div className="flex-shrink-0">
+                        {/* <div className="flex-shrink-0">
                           <div className="dropdown card-header-dropdown">
                             <a
                               className="text-reset dropdown-btn"
@@ -422,7 +489,7 @@ function Dashboard() {
                               </a>
                             </div>
                           </div>
-                        </div>
+                        </div> */}
                       </div>
                       <div className="card-body">
                         <div className="table-responsive table-card">
@@ -440,92 +507,50 @@ function Dashboard() {
                               </tr>
                             </thead>
 
-                            <tbody>
-                              <tr>
-                                <td className="fw-medium">MV30042402378</td>
-                                <td>
-                                  <a href="#" className="text-reset">
-                                    Shanti Devi - 8543899402
-                                  </a>
-                                </td>
-                                <td>30-Apr-24</td>
-                                <td>Ankit C Rajpoot</td>
-                                <td>
-                                  <span className="badge badge-soft-warning">
-                                    Inprogress
-                                  </span>
-                                </td>
-                                <td className="text-muted">01-May-24</td>
-                              </tr>
-                              <tr>
-                                <td className="fw-medium">MV30042405159</td>
-                                <td>
-                                  <a href="#" className="text-reset">
-                                    Sujeet Yadav - 8318263938
-                                  </a>
-                                </td>
-                                <td>30-Apr-24</td>
-                                <td>DINKAR YADAV</td>
-                                <td>
-                                  <span className="badge badge-soft-danger">
-                                    Shutdown Requested
-                                  </span>
-                                </td>
-                                <td className="text-muted">30-Apr-24</td>
-                              </tr>
-                              <tr>
-                                <td className="fw-medium">MV28042404577</td>
-                                <td>
-                                  <a href="#" className="text-reset">
-                                    Rajiv Tripathi - 9450023406
-                                  </a>
-                                </td>
-                                <td>28-Apr-24</td>
-                                <td>Suresh Kumar</td>
-                                <td>
-                                  <span className="badge badge-soft-warning">
-                                    Inprogress
-                                  </span>
-                                </td>
-                                <td className="text-muted">30-Apr-24</td>
-                              </tr>
-                              <tr>
-                                <td className="fw-medium">MV30042405836</td>
-                                <td>
-                                  <a href="#" className="text-reset">
-                                    Omkar - 7985182576
-                                  </a>
-                                </td>
-                                <td>30-Apr-24</td>
-                                <td>Anshuman</td>
-                                <td>
-                                  <span className="badge badge-soft-info">
-                                    Shut Down Approved
-                                  </span>
-                                </td>
-                                <td className="text-muted">30-Apr-24</td>
-                              </tr>
-                              <tr>
-                                <td className="fw-medium">MV30042405687</td>
-                                <td>
-                                  <a href="#" className="text-reset">
-                                    Rishabh Mishra - 7985182576
-                                  </a>
-                                </td>
-                                <td>30-Apr-24</td>
-                                <td>Gaurav Kumar</td>
-                                <td>
-                                  <span className="badge badge-soft-warning">
-                                    Inprogress
-                                  </span>
-                                </td>
-                                <td className="text-muted">30-Apr-24</td>
-                              </tr>
-                            </tbody>
+                            {/* <tbody>
+                              {complaint.length > 0 ? (
+                                complaint.map((comp) => (
+                                  <tr key={comp._id}>
+                                    <td>{comp.complain_no}</td>
+                                    <td>
+                                      {comp.consumer_name}{" "}
+                                      {comp.consumer_mobile}
+                                    </td>
+                                    <td>
+                                      {formatDate(comp.registration_date)}
+                                    </td>
+                                    <td>{comp.registration_date}</td>
+                                    <td>
+                                      <span
+                                        className={`${
+                                          comp.status?.name === "In Progress"
+                                            ? "badge badge-soft-warning"
+                                            : comp.status?.name === "Pending"
+                                            ? "badge badge-soft-info"
+                                            : comp.status?.name === ""
+                                            ? ""
+                                            : "badge badge-soft-danger"
+                                        }`}
+                                      >
+                                        {comp.status?.name}
+                                      </span>
+                                    </td>
+
+                                    <td>{formatDate(comp.status?.date)}</td>
+                                  </tr>
+                                ))
+                              ) : (
+                                <tr>
+                                  <td colSpan="6" align="center">
+                                    No Complaint.
+                                  </td>
+                                </tr>
+                              )}
+                            </tbody> */}
                           </table>
                         </div>
 
-                        <div className="align-items-center mt-4 pt-2 justify-content-between d-flex">
+                        {/* <div className="align-items-center mt-4 pt-2 justify-content-between d-flex">
                           <div className="flex-shrink-0">
                             <div className="text-muted">
                               Showing <span className="fw-semibold">5</span> of{" "}
@@ -559,12 +584,12 @@ function Dashboard() {
                               </a>
                             </li>
                           </ul>
-                        </div>
+                        </div> */}
                       </div>
                     </div>
                   </div>
 
-                  <div className="col-xl-4">
+                  {/* <div className="col-xl-4">
                     <div className="card card-height-100">
                       <div className="card-header align-items-center d-flex">
                         <h4 className="card-title mb-0 flex-grow-1">
@@ -737,67 +762,10 @@ function Dashboard() {
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </div> */}
                 </div>
                 <div className="row">
-                  <div className="col-xl-4">
-                    <div className="card card-height-100">
-                      <div className="card-header align-items-center d-flex">
-                        <h4 className="card-title mb-0 flex-grow-1">
-                          Complaints Source
-                        </h4>
-                        <div className="flex-shrink-0">
-                          <div className="dropdown card-header-dropdown">
-                            <a
-                              className="text-reset dropdown-btn"
-                              href="#"
-                              data-bs-toggle="dropdown"
-                              aria-haspopup="true"
-                              aria-expanded="false"
-                            >
-                              <span className="text-muted">
-                                Report
-                                <i className="mdi mdi-chevron-down ms-1"></i>
-                              </span>
-                            </a>
-                            <div className="dropdown-menu dropdown-menu-end">
-                              <a className="dropdown-item" href="#">
-                                Download Report
-                              </a>
-                              <a className="dropdown-item" href="#">
-                                Export
-                              </a>
-                              <a className="dropdown-item" href="#">
-                                Import
-                              </a>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="card-body">
-                        {/* <div
-                            id="store-visits-source"
-                            data-colors='["--vz-primary", "--vz-success", "--vz-warning", "--vz-danger", "--vz-info"]'
-                            className="apex-charts"
-                            dir="ltr"
-                          ></div> */}
-                        <PieChart
-                          series={[
-                            {
-                              data: [
-                                { id: 0, value: 10 },
-                                { id: 1, value: 15 },
-                                { id: 2, value: 20 },
-                              ],
-                            },
-                          ]}
-                          width={400}
-                          height={300}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-xl-8">
+                  <div className="col-xl-12">
                     <div className="card">
                       <div className="card-header align-items-center d-flex">
                         <h4 className="card-title mb-0 flex-grow-1">
@@ -827,160 +795,41 @@ function Dashboard() {
                                 <th scope="col">Action</th>
                               </tr>
                             </thead>
-                            <tbody>
-                              <tr>
-                                <td>
-                                  <a
-                                    href="#"
-                                    className="fw-medium link-primary"
-                                  >
-                                    5464990000
-                                  </a>
-                                </td>
-                                <td>
-                                  <div className="flex-grow-1">Shanti Devi</div>
-                                </td>
-                                <td>Rural</td>
-                                <td>8543899402</td>
-                                <td>
-                                  <span className="badge badge-soft-success">
-                                    Paid
-                                  </span>
-                                </td>
-                                <td>Ankit C Rajpoot</td>
-                                <td>
-                                  <h5>(View)</h5>
-                                </td>
-                              </tr>
-                              <tr>
-                                <td>
-                                  <a
-                                    href="#"
-                                    className="fw-medium link-primary"
-                                  >
-                                    1994210000
-                                  </a>
-                                </td>
-                                <td>
-                                  <div className="flex-grow-1">
-                                    Rajiv Tripathi
-                                  </div>
-                                </td>
-                                <td>Class1</td>
-                                <td>9450023406</td>
-                                <td>
-                                  <span className="badge badge-soft-success">
-                                    Paid
-                                  </span>
-                                </td>
-                                <td>Suresh Kumar</td>
-                                <td>
-                                  <h5>(View)</h5>
-                                </td>
-                              </tr>
-                              <tr>
-                                <td>
-                                  <a
-                                    href="#"
-                                    className="fw-medium link-primary"
-                                  >
-                                    5464990000
-                                  </a>
-                                </td>
-                                <td>
-                                  <div className="flex-grow-1">
-                                    Sujeet Yadav
-                                  </div>
-                                </td>
-                                <td>Rural</td>
-                                <td>8543899402</td>
-                                <td>
-                                  <span className="badge badge-soft-warning">
-                                    Pending
-                                  </span>
-                                </td>
-                                <td>Suresh Kumar</td>
-                                <td>
-                                  <h5>(View)</h5>
-                                </td>
-                              </tr>
-                              <tr>
-                                <td>
-                                  <a
-                                    href="#"
-                                    className="fw-medium link-primary"
-                                  >
-                                    7321023905
-                                  </a>
-                                </td>
-                                <td>
-                                  <div className="flex-grow-1">
-                                    POONAM MATHUR
-                                  </div>
-                                </td>
-                                <td>Class1</td>
-                                <td>9235041510</td>
-                                <td>
-                                  <span className="badge badge-soft-danger">
-                                    Unpaid
-                                  </span>
-                                </td>
-                                <td>RUPESH SINGH</td>
-                                <td>
-                                  <h5>(View)</h5>
-                                </td>
-                              </tr>
-                              <tr>
-                                <td>
-                                  <a
-                                    href="#"
-                                    className="fw-medium link-primary"
-                                  >
-                                    8002301000
-                                  </a>
-                                </td>
-                                <td>
-                                  <div className="flex-grow-1">PYAREY LAL</div>
-                                </td>
-                                <td>Rural</td>
-                                <td>7897267362</td>
-                                <td>
-                                  <span className="badge badge-soft-success">
-                                    Paid
-                                  </span>
-                                </td>
-                                <td>Sudheer Kumar</td>
-                                <td>
-                                  <h5>(View)</h5>
-                                </td>
-                              </tr>
-                              <tr>
-                                <td>
-                                  <a
-                                    href="#"
-                                    className="fw-medium link-primary"
-                                  >
-                                    3042559418
-                                  </a>
-                                </td>
-                                <td>
-                                  <div className="flex-grow-1">
-                                    Ajay kumar nag
-                                  </div>
-                                </td>
-                                <td>Class1</td>
-                                <td>9918101590</td>
-                                <td>
-                                  <span className="badge badge-soft-success">
-                                    Paid
-                                  </span>
-                                </td>
-                                <td>Satyam Singh</td>
-                                <td>
-                                  <h5>(View)</h5>
-                                </td>
-                              </tr>
-                            </tbody>
+                            {/* <tbody>
+                              {complaint.length > 0 ? (
+                                complaint.map((comp) => (
+                                  <tr key={comp._id}>
+                                    <td>{comp.complain_no}</td>
+                                    <td>{comp.consumer_name}</td>
+                                    <td>{comp.consumer_type}</td>
+                                    <td>{comp.consumer_mobile}</td>
+                                    <td>
+                                      <span
+                                        className={`${
+                                          comp.status?.name === "In Progress"
+                                            ? "badge badge-soft-warning"
+                                            : comp.status?.name === "Pending"
+                                            ? "badge badge-soft-info"
+                                            : comp.status?.name === ""
+                                            ? ""
+                                            : "badge badge-soft-danger"
+                                        }`}
+                                      >
+                                        {comp.status?.name}
+                                      </span>
+                                    </td>
+                                    <td>{comp.je_name}</td>
+                                    <td>View</td>
+                                  </tr>
+                                ))
+                              ) : (
+                                <tr>
+                                  <td colSpan="7" align="center">
+                                    No Complaint.
+                                  </td>
+                                </tr>
+                              )}
+                            </tbody> */}
                           </table>
                         </div>
                       </div>

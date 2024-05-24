@@ -1,25 +1,27 @@
+import { Link, useLocation } from "react-router-dom";
 import logo from "./../assets/images/logo-light.png";
 function Sidebar() {
+  const { pathname } = useLocation();
   return (
     <div className="app-menu navbar-menu">
       <div className="navbar-brand-box">
-        <a href="dashboard.html" className="logo logo-dark">
+        <Link to={"/dashboard"} className="logo logo-dark">
           <span className="logo-sm">
             <img src={logo} alt="" height="80" />
           </span>
           <span className="logo-lg">
             <img src={logo} alt="" height="75" />
           </span>
-        </a>
+        </Link>
 
-        <a href="dashboard.html" className="logo logo-light">
+        <Link to={"/dashboard"} className="logo logo-light">
           <span className="logo-sm">
             <img src={logo} alt="" height="80" />
           </span>
           <span className="logo-lg">
             <img src={logo} alt="" height="75" />
           </span>
-        </a>
+        </Link>
         <button
           type="button"
           className="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover"
@@ -36,34 +38,44 @@ function Sidebar() {
               <span data-key="t-menu">Menu</span>
             </li>
             <li className="nav-item">
-              <a className="nav-link menu-link" href="dashboard.html">
+              <Link
+                className={`${
+                  pathname === "/dashboard"
+                    ? "nav-link menu-link active"
+                    : "nav-link menu-link "
+                } `}
+                to={"/dashboard"}
+              >
                 <i className="ri-dashboard-2-line"></i>{" "}
                 <span data-key="t-dashboards">Dashboards</span>
-              </a>
+              </Link>
             </li>
             <li className="nav-item">
-              <a
-                className="nav-link menu-link"
-                href="#sidebarApps"
-                data-bs-toggle="collapse"
-                role="button"
-                aria-expanded="false"
-                aria-controls="sidebarApps"
+              <Link
+                to="/complaint-list"
+                className={`${
+                  pathname === "/complaint-list"
+                    ? "nav-link menu-link active"
+                    : "nav-link menu-link "
+                } `}
               >
                 <i className="ri-apps-2-line"></i>{" "}
                 <span data-key="t-apps">Complaints</span>
-              </a>
-              <div className="collapse menu-dropdown" id="sidebarApps">
+              </Link>
+              {/* <div className="collapse menu-dropdown" id="sidebarApps">
                 <ul className="nav nav-sm flex-column">
                   <li className="nav-item">
-                    <a
-                      href="complaint-list.html"
-                      className="nav-link"
+                    <Link
+                      to="/complaint-list"
+                      className={`${
+                        pathname === "/complaint-list"
+                          ? "nav-link menu-link active"
+                          : "nav-link menu-link "
+                      } `}
                       data-key="t-calendar"
                     >
-                      {" "}
-                      New{" "}
-                    </a>
+                      Complaint List
+                    </Link>
                   </li>
                   <li className="nav-item">
                     <a
@@ -107,10 +119,21 @@ function Sidebar() {
                     </a>
                   </li>
                 </ul>
-              </div>
+              </div> */}
             </li>
             <li className="nav-item">
-              <a
+              <Link
+                to="/shutdown-list"
+                className={`${
+                  pathname === "/shutdown-list"
+                    ? "nav-link menu-link active"
+                    : "nav-link menu-link "
+                } `}
+              >
+                <i className="ri-apps-2-line"></i>{" "}
+                <span data-key="t-apps">Shutdown</span>
+              </Link>
+              {/* <a
                 className="nav-link menu-link"
                 href="#sidebarSd"
                 data-bs-toggle="collapse"
@@ -164,9 +187,22 @@ function Sidebar() {
                     </a>
                   </li>
                 </ul>
-              </div>
+              </div> */}
             </li>
             <li className="nav-item">
+              <Link
+                to="/shutdown-list"
+                className={`${
+                  pathname === "/shutdown-list"
+                    ? "nav-link menu-link active"
+                    : "nav-link menu-link "
+                } `}
+              >
+                <i className="ri-apps-2-line"></i>{" "}
+                <span data-key="t-apps">Gang Management</span>
+              </Link>
+            </li>
+            {/* <li className="nav-item">
               <a
                 className="nav-link menu-link"
                 href="#sidebarLayouts"
@@ -316,7 +352,7 @@ function Sidebar() {
                 <i className="ri-rocket-line"></i>{" "}
                 <span data-key="t-landing">Logout</span>
               </a>
-            </li>
+            </li> */}
           </ul>
         </div>
       </div>

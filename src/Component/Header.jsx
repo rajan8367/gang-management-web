@@ -1,6 +1,31 @@
+import { useEffect, useState } from "react";
+import { useUserContext } from "../hooks/userContext";
 import avatar from "./../assets/images/users/avatar-7.jpg";
+import { useNavigate } from "react-router-dom";
+import Loader from "./Loader";
 
 function Header() {
+  const { user, setUser } = useUserContext();
+  const navigate = useNavigate();
+  const [loggedIn, setLoggedIn] = useState(true);
+
+  useEffect(() => {
+    if (localStorage.getItem("userData") === null) {
+      navigate("/", { replace: true });
+      setLoggedIn(false);
+    } else {
+      setLoggedIn(true);
+      setUser(JSON.parse(localStorage.getItem("userData")));
+    }
+  }, []);
+  const logout = () => {
+    localStorage.removeItem("userData");
+    setUser({});
+    navigate("/", { replace: true });
+  };
+
+  if (!loggedIn) return <Loader />;
+
   return (
     <div id="layout-wrapper">
       <header id="page-topbar">
@@ -25,7 +50,6 @@ function Header() {
                     className="form-control"
                     placeholder="Search..."
                     autoComplete="off"
-                    id="search-options"
                   />
                   <span className="mdi mdi-magnify search-widget-icon"></span>
                   <span
@@ -146,7 +170,7 @@ function Header() {
 
             <div className="d-flex align-items-center">
               <div className="dropdown d-md-none topbar-head-dropdown header-item">
-                <button
+                {/* <button
                   type="button"
                   className="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle"
                   id="page-header-search-dropdown"
@@ -155,7 +179,7 @@ function Header() {
                   aria-expanded="false"
                 >
                   <i className="bx bx-search fs-22"></i>
-                </button>
+                </button> */}
                 <div
                   className="dropdown-menu dropdown-menu-lg dropdown-menu-end p-0"
                   aria-labelledby="page-header-search-dropdown"
@@ -179,7 +203,7 @@ function Header() {
               </div>
 
               <div className="dropdown topbar-head-dropdown ms-1 header-item">
-                <button
+                {/* <button
                   type="button"
                   className="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle"
                   data-bs-toggle="dropdown"
@@ -187,7 +211,7 @@ function Header() {
                   aria-expanded="false"
                 >
                   <i className="bx bx-category-alt fs-22"></i>
-                </button>
+                </button> */}
                 <div className="dropdown-menu dropdown-menu-lg p-0 dropdown-menu-end">
                   <div className="p-3 border-top-0 border-start-0 border-end-0 border-dashed border">
                     <div className="row align-items-center">
@@ -269,26 +293,26 @@ function Header() {
               </div>
 
               <div className="ms-1 header-item d-none d-sm-flex">
-                <button
+                {/* <button
                   type="button"
                   className="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle"
                   data-toggle="fullscreen"
                 >
                   <i className="bx bx-fullscreen fs-22"></i>
-                </button>
+                </button> */}
               </div>
 
               <div className="ms-1 header-item d-none d-sm-flex">
-                <button
+                {/* <button
                   type="button"
                   className="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle light-dark-mode"
                 >
                   <i className="bx bx-moon fs-22"></i>
-                </button>
+                </button> */}
               </div>
 
               <div className="dropdown topbar-head-dropdown ms-1 header-item">
-                <button
+                {/* <button
                   type="button"
                   className="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle"
                   id="page-header-notifications-dropdown"
@@ -300,7 +324,7 @@ function Header() {
                   <span className="position-absolute topbar-badge fs-10 translate-middle badge rounded-pill bg-danger">
                     3<span className="visually-hidden">unread messages</span>
                   </span>
-                </button>
+                </button> */}
                 <div
                   className="dropdown-menu dropdown-menu-lg dropdown-menu-end p-0"
                   aria-labelledby="page-header-notifications-dropdown"
@@ -753,17 +777,21 @@ function Header() {
                     />
                     <span className="text-start ms-xl-2">
                       <span className="d-none d-xl-inline-block ms-1 fw-medium user-name-text">
-                        Sanjeev Kumar Mishra
+                        {user?.name}
                       </span>
                       <span className="d-none d-xl-block ms-1 fs-12 text-muted user-name-sub-text">
-                        XEN (Lucknow)
+                        {user?.type} (
+                        {user?.addresses && user.addresses.length > 0
+                          ? user.addresses[0].city
+                          : ""}
+                        )
                       </span>
                     </span>
                   </span>
                 </button>
                 <div className="dropdown-menu dropdown-menu-end">
-                  <h6 className="dropdown-header">Welcome Mr. Sanjeev!</h6>
-                  <a className="dropdown-item" href="pages-profile.html">
+                  <h6 className="dropdown-header">Welcome Mr. {user?.name}!</h6>
+                  {/* <a className="dropdown-item" href="pages-profile.html">
                     <i className="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i>{" "}
                     <span className="align-middle">Profile</span>
                   </a>
@@ -789,14 +817,14 @@ function Header() {
                     </span>
                     <i className="mdi mdi-cog-outline text-muted fs-16 align-middle me-1"></i>{" "}
                     <span className="align-middle">Change Password</span>
-                  </a>
+                  </a> */}
 
-                  <a className="dropdown-item" href="auth-logout-basic.html">
+                  <button className="dropdown-item" onClick={logout}>
                     <i className="mdi mdi-logout text-muted fs-16 align-middle me-1"></i>{" "}
                     <span className="align-middle" data-key="t-logout">
                       Logout
                     </span>
-                  </a>
+                  </button>
                 </div>
               </div>
             </div>

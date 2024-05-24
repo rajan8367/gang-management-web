@@ -19,7 +19,6 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 function CustomAlert() {
   const { customMsg, setCustomMsg } = useUserContext();
   const [success, setSuccess] = React.useState(false);
-  console.log(customMsg.isVisible);
   React.useEffect(() => {
     setSuccess(false);
     setTimeout(function () {
@@ -67,7 +66,6 @@ function CustomAlert() {
       <DialogActions sx={{ justifyContent: "center" }}>
         <Button
           variant="contained"
-          color="secondary"
           sx={{ width: 150 }}
           onClick={() =>
             setCustomMsg({

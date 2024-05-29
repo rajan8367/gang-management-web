@@ -1,30 +1,31 @@
 import { useEffect, useState } from "react";
 import { useUserContext } from "../hooks/userContext";
 import avatar from "./../assets/images/users/avatar-7.jpg";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Loader from "./Loader";
 
 function Header() {
+  const { pathname } = useLocation();
   const { user, setUser } = useUserContext();
   const navigate = useNavigate();
   const [loggedIn, setLoggedIn] = useState(true);
 
   useEffect(() => {
     if (localStorage.getItem("userData") === null) {
-      navigate("/", { replace: true });
+      //navigate("/", { replace: true });
       setLoggedIn(false);
     } else {
       setLoggedIn(true);
       setUser(JSON.parse(localStorage.getItem("userData")));
     }
-  }, []);
+  }, [pathname]);
   const logout = () => {
     localStorage.removeItem("userData");
     setUser({});
     navigate("/", { replace: true });
   };
 
-  if (!loggedIn) return <Loader />;
+  //if (!loggedIn) return <Loader />;
 
   return (
     <div id="layout-wrapper">

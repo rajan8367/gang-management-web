@@ -9,6 +9,7 @@ import ComplaintDetail from "./Pages/Private/ComplaintDetail";
 import ShutdownList from "./Pages/Private/Shutdown-list";
 import ComplaintTracking from "./Pages/Private/ComplaintTracking";
 import ContentHolder from "./Component/ContentHolder";
+import GangList from "./Pages/Private/GangList";
 
 function App() {
   const { pathname } = useLocation();
@@ -69,6 +70,15 @@ function App() {
             <>
               <PageTitle title="Complaint Tracking | Complaint Management System UPPCL" />
               <ComplaintTracking />
+            </>
+          }
+        />
+        <Route
+          path="/gang-list"
+          element={
+            <>
+              <PageTitle title="Gang List | Complaint Management System UPPCL" />
+              <GangList />
             </>
           }
         />

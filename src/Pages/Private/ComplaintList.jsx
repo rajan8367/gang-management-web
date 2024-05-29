@@ -1,4 +1,3 @@
-import { height, width } from "@mui/system";
 import Layout from "../../Component/Layout";
 
 function ComplaintList() {

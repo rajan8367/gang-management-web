@@ -191,9 +191,9 @@ function Sidebar() {
             </li>
             <li className="nav-item">
               <Link
-                to="/shutdown-list"
+                to="/gang-list"
                 className={`${
-                  pathname === "/shutdown-list"
+                  pathname === "/gang-list"
                     ? "nav-link menu-link active"
                     : "nav-link menu-link "
                 } `}

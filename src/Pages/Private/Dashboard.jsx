@@ -7,7 +7,9 @@ import { useEffect, useState } from "react";
 import { apiUrl } from "../../Constant";
 import moment from "moment";
 import Loader from "../../Component/Loader";
+import { useNavigate } from "react-router-dom";
 function Dashboard() {
+  const navigate = useNavigate();
   const { user } = useUserContext();
   const [greet, setGreet] = useState("");
   const [token, setToken] = useState();
@@ -15,7 +17,6 @@ function Dashboard() {
   function formatDate(dateString) {
     // Parse the date string using Moment.js
     const date = moment(dateString);
-
     // Format the date
     return date.format("DD MMM YY");
   }
@@ -67,19 +68,6 @@ function Dashboard() {
     }
   };
 
-  /* const getMonthFromDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleString("default", { month: "short" });
-  };
-  
-  const complaintsByMonth = data.reduce((acc, complaint) => {
-    const month = getMonthFromDate(complaint.registration_date);
-    acc[month] = (acc[month] || 0) + 1;
-    return acc;
-  }, {});
-  
-  const months = Object.keys(complaintsByMonth);
-  const complaintCounts = Object.values(complaintsByMonth); */
   if (complaint === null) return <Loader />;
   return (
     <Layout>

@@ -12,7 +12,12 @@ export const AppProvider = ({ children }) => {
   const [user, setUser] = useState({
     name: "Rajan Yadav ",
     email: "rajan@velocis.com",
-    role: "sso",
+    type: "SSO",
+    addresses: [
+      {
+        city: "Lucknow",
+      },
+    ],
   });
 
   return (

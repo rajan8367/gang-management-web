@@ -68,7 +68,7 @@ function Dashboard() {
     }
   };
 
-  if (complaint === null) return <Loader />;
+  //if (complaint === null) return <Loader />;
   return (
     <Layout>
       <div className="page-content">
@@ -153,7 +153,7 @@ function Dashboard() {
                           <div>
                             <h4 className="fs-22 fw-semibold ff-secondary mb-4">
                               <span className="counter-value" data-target="559">
-                                {complaint.totalComplain}
+                                {complaint?.totalComplain}
                               </span>{" "}
                             </h4>
                             <a
@@ -192,7 +192,7 @@ function Dashboard() {
                           <div>
                             <h4 className="fs-22 fw-semibold ff-secondary mb-4">
                               <span className="counter-value" data-target="368">
-                                {complaint.totalApproved}
+                                {complaint?.totalApproved}
                               </span>
                             </h4>
                             <a

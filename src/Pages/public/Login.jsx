@@ -9,11 +9,13 @@ import { useUserContext } from "../../hooks/userContext";
 import { Button, CircularProgress } from "@mui/material";
 import { green } from "@mui/material/colors";
 import Loader from "./../../Component/Loader";
+import axios from "axios";
 
 function Login() {
   const navigate = useNavigate();
   const [showLoader, setShowLoader] = useState(false);
   const { setCustomMsg, setUser } = useUserContext();
+  const { setToken } = useUserContext();
   const [credential, setCredential] = useState({
     userName: "",
     password: "",
@@ -47,25 +49,26 @@ function Login() {
       }));
     } else {
       setShowLoader(true);
-      function json(response) {
-        return response.json();
-      }
-      var url = `${apiUrl}login`;
-      fetch(url, {
-        method: "post",
-        headers: {
-          "Content-type": "application/x-www-form-urlencoded; charset=UTF-8",
-        },
-        body:
-          "email=" + credential.userName + "&password=" + credential.password,
-      })
-        .then(json)
-        .then(function (response) {
+      const data = {
+        username: credential.userName,
+        password: credential.password,
+      };
+      axios
+        .post(`${apiUrl}web-login`, data, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+        .then((response) => {
+          console.log("Response:", response);
           setShowLoader(false);
-          console.log("res: ", response);
-          if (response.success) {
-            localStorage.setItem("token", response.token);
-            localStorage.setItem("userData", JSON.stringify(response.user));
+          if (response.status) {
+            localStorage.setItem("token", response?.data?.token);
+            setToken(response?.data?.token);
+            localStorage.setItem(
+              "userData",
+              JSON.stringify(response?.data?.userData)
+            );
             setUser(response.user);
             navigate("/dashboard", { replace: true });
           } else {
@@ -77,9 +80,14 @@ function Login() {
             }));
           }
         })
-        .catch(function (error) {
+        .catch((error) => {
           setShowLoader(false);
-          console.error(error);
+          setCustomMsg((prevMsg) => ({
+            ...prevMsg,
+            isVisible: true,
+            text: error?.response?.data?.message,
+            type: "error",
+          }));
         });
     }
   };

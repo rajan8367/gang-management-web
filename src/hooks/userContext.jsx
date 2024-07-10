@@ -19,10 +19,20 @@ export const AppProvider = ({ children }) => {
       },
     ],
   });
+  const [token, setToken] = useState("");
 
   return (
     <AppContext.Provider
-      value={{ userType, setUserType, customMsg, setCustomMsg, user, setUser }}
+      value={{
+        userType,
+        setUserType,
+        customMsg,
+        setCustomMsg,
+        user,
+        setUser,
+        token,
+        setToken,
+      }}
     >
       {children}
     </AppContext.Provider>

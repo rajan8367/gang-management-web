@@ -2,25 +2,24 @@ import { useEffect, useState } from "react";
 import { useUserContext } from "../hooks/userContext";
 import avatar from "./../assets/images/users/avatar-7.jpg";
 import { useLocation, useNavigate } from "react-router-dom";
-import Loader from "./Loader";
 
 function Header() {
   const { pathname } = useLocation();
-  const { user, setUser } = useUserContext();
+  const { user, setUser, setToken, token } = useUserContext();
   const navigate = useNavigate();
-  const [loggedIn, setLoggedIn] = useState(true);
 
   useEffect(() => {
-    if (localStorage.getItem("userData") === null) {
-      //navigate("/", { replace: true });
-      setLoggedIn(false);
+    const userData = localStorage.getItem("userData");
+    const token = localStorage.getItem("token");
+    if (userData === null && token === null) {
+      navigate("/", { replace: true });
     } else {
-      setLoggedIn(true);
-      setUser(JSON.parse(localStorage.getItem("userData")));
+      setUser(JSON.parse(userData));
+      setToken(token);
     }
   }, [pathname]);
   const logout = () => {
-    localStorage.removeItem("userData");
+    localStorage.clear();
     setUser({});
     navigate("/", { replace: true });
   };
@@ -781,11 +780,7 @@ function Header() {
                         {user?.name}
                       </span>
                       <span className="d-none d-xl-block ms-1 fs-12 text-muted user-name-sub-text">
-                        {user?.type} (
-                        {user?.addresses && user.addresses.length > 0
-                          ? user.addresses[0].city
-                          : ""}
-                        )
+                        {user?.role} ({user?.sub_station_name})
                       </span>
                     </span>
                   </span>

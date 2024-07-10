@@ -1,1 +1,1 @@
-export const apiUrl = 'http://192.168.1.9:5000/user/'
+export const apiUrl = 'https://devops1.uppcl.org/gangmanagement/api/'

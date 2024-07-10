@@ -1,8 +1,286 @@
+import { forwardRef, useEffect, useState } from "react";
 import Layout from "../../Component/Layout";
+import axios from "axios";
+import { useUserContext } from "../../hooks/userContext";
+import { apiUrl } from "../../Constant";
+import Loader from "../../Component/Loader";
+import Button from "@mui/material/Button";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogTitle from "@mui/material/DialogTitle";
+import Slide from "@mui/material/Slide";
+const Transition = forwardRef(function Transition(props, ref) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
 
 function GangList() {
+  const { token, user, setCustomMsg } = useUserContext();
+  const [showLoader, setShowLoader] = useState(false);
+  const [gangList, setGangList] = useState(null);
+  const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState("add");
+
+  const [gangData, setGangData] = useState({
+    gangID: "",
+    gangLeaderName: "",
+    gangLeaderID: "",
+    gangName: "",
+    gangMobile: "",
+    tools_availabe: "",
+    location: "",
+    substation: "",
+    feeder: "",
+    security_equipment: [
+      {
+        item: "security1",
+        quantity: 2,
+      },
+    ],
+    latitude: "",
+    longitude: "",
+    substation_id: "",
+  });
+
+  useEffect(() => {
+    if (user?.substation_id !== undefined) {
+      setGangData((prevGangData) => ({
+        ...prevGangData,
+        substation_id: user.substation_id,
+        substation: user.sub_station_name,
+      }));
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            setGangData((prevGangData) => ({
+              ...prevGangData,
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+            }));
+          },
+          (err) => {
+            console.log(err.message);
+          }
+        );
+      } else {
+        console.log("Geolocation is not supported by this browser.");
+      }
+    }
+  }, [user]);
+  useEffect(() => {
+    if (token !== "") {
+      fetchGang();
+    }
+  }, [token]);
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+  const fetchGang = () => {
+    setShowLoader(true);
+    const data = {
+      search: "",
+      gangID: "",
+    };
+    axios
+      .post(`${apiUrl}list-gang`, data, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        console.log("Response:", response);
+        setGangList(response?.data?.gangs);
+        setShowLoader(false);
+      })
+      .catch((error) => {
+        setShowLoader(false);
+        console.log(error);
+      });
+  };
+  const deleteGang = (id) => {
+    const data = {
+      gangID: id,
+    };
+
+    axios
+      .delete(`${apiUrl}delete-gang`, {
+        data: data,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        console.log("Response:", response);
+        setCustomMsg((prevMsg) => ({
+          ...prevMsg,
+          isVisible: true,
+          text: response?.data?.message,
+          type: "success",
+        }));
+        fetchGang();
+      })
+      .catch((error) => {
+        alert(error.message);
+        console.error(
+          "Error:",
+          error.response ? error.response.data : error.message
+        );
+      });
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setGangData((prevGangData) => ({
+      ...prevGangData,
+      [name]: value,
+    }));
+  };
+  const addGang = (e) => {
+    e.preventDefault();
+    setShowLoader(true);
+    const data = {
+      gangLeaderName: gangData.gangLeaderName,
+      gangLeaderID: gangData.gangLeaderID,
+      gangName: gangData.gangName,
+      gangMobile: gangData.gangMobile,
+      tools_availabe: gangData.tools_availabe,
+      location: gangData.location,
+      substation: gangData.substation,
+      feeder: gangData.feeder,
+      security_equipment: gangData.security_equipment,
+      latitude: gangData.latitude,
+      longitude: gangData.longitude,
+      substation_id: gangData.substation_id,
+    };
+    axios
+      .post(`${apiUrl}add-gang`, data, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        console.log("Response:", response);
+        setShowLoader(false);
+        setCustomMsg((prevMsg) => ({
+          ...prevMsg,
+          isVisible: true,
+          text: response?.data?.message,
+          type: "success",
+        }));
+        setOpen(false);
+        fetchGang();
+      })
+      .catch((error) => {
+        setShowLoader(false);
+        console.log(error);
+      });
+  };
+  const updateGang = (e) => {
+    e.preventDefault();
+    setShowLoader(true);
+    const data = {
+      gangID: gangData.gangID,
+      gangLeaderName: gangData.gangLeaderName,
+      gangLeaderID: gangData.gangLeaderID,
+      gangName: gangData.gangName,
+      gangMobile: gangData.gangMobile,
+      tools_availabe: gangData.tools_availabe,
+      location: gangData.location,
+      substation: gangData.substation,
+      feeder: gangData.feeder,
+      security_equipment: [
+        {
+          item: "security1",
+          quantity: 2,
+        },
+      ],
+      latitude: gangData.latitude,
+      longitude: gangData.longitude,
+      substation_id: gangData.substation_id,
+    };
+    console.log("-- ", gangData);
+    //return;
+    axios
+      .put(`${apiUrl}edit-gang`, data, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        console.log("Response:", response);
+        setShowLoader(false);
+        setCustomMsg((prevMsg) => ({
+          ...prevMsg,
+          isVisible: true,
+          text: response?.data?.message,
+          type: "success",
+        }));
+        setOpen(false);
+        fetchGang();
+      })
+      .catch((error) => {
+        setShowLoader(false);
+        console.log(error);
+      });
+  };
+  const getGangData = (id) => {
+    setShowLoader(true);
+
+    const data = {
+      search: "",
+      gangID: id,
+    };
+    axios
+      .post(`${apiUrl}list-gang`, data, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        console.log("Response:", response);
+        setMode("edit");
+        const {
+          gangName,
+          gangMobile,
+          gangLeaderName,
+          gangLeaderID,
+          feeder,
+          location,
+          tools_availabe,
+        } = response.data.gangs[0];
+        setGangData((prevGangData) => ({
+          ...prevGangData,
+          gangName: gangName,
+          gangMobile: gangMobile,
+          gangLeaderID: gangLeaderID,
+          gangLeaderName: gangLeaderName,
+          feeder: feeder,
+          location: location,
+          tools_availabe: tools_availabe,
+        }));
+        setOpen(true);
+        setShowLoader(false);
+      })
+      .catch((error) => {
+        setShowLoader(false);
+        console.log(error);
+      });
+  };
   return (
     <Layout>
+      {showLoader && <Loader />}
       <div className="page-content">
         <div className="container-fluid">
           <div className="row">
@@ -29,79 +307,19 @@ function GangList() {
                     <h5 className="card-title mb-0 flex-grow-1">Gangs List</h5>
                     <div className="flex-shrink-0">
                       <button
-                        className="btn btn-danger add-btn"
-                        data-bs-toggle="modal"
-                        data-bs-target="#showModal"
+                        className="btn btn-primary add-btn"
+                        onClick={handleClickOpen}
                       >
                         <i className="ri-add-line align-bottom me-1"></i> Create
                         Gang
                       </button>
-                      {/* <button className="btn btn-soft-danger">
-                        <i className="ri-delete-bin-2-line"></i>
-                      </button> */}
                     </div>
                   </div>
                 </div>
-                {/* <div className="card-body border border-dashed border-end-0 border-start-0">
-                  <form>
-                    <div className="row g-3">
-                      <div className="col-xxl-5 col-sm-12">
-                        <div className="search-box">
-                          <input
-                            type="text"
-                            className="form-control search bg-light border-light"
-                            placeholder="Search for ticket details or something..."
-                          />
-                          <i className="ri-search-line search-icon"></i>
-                        </div>
-                      </div>
 
-                      <div className="col-xxl-3 col-sm-4">
-                        <input
-                          type="text"
-                          className="form-control bg-light border-light"
-                          data-provider="flatpickr"
-                          data-date-format="d M, Y"
-                          data-range-date="true"
-                          id="demo-datepicker"
-                          placeholder="Select date range"
-                        />
-                      </div>
-                      <div className="col-xxl-3 col-sm-4">
-                        <div className="input-light">
-                          <select
-                            className="form-control"
-                            data-choices
-                            data-choices-search-false
-                            name="choices-single-default"
-                            id="idStatus"
-                            defaultValue={"all"}
-                          >
-                            <option value="">Status</option>
-                            <option value="all">All</option>
-                            <option value="Open">Open</option>
-                            <option value="Inprogress">Inprogress</option>
-                            <option value="Closed">Closed</option>
-                            <option value="New">New</option>
-                          </select>
-                        </div>
-                      </div>
-                      <div className="col-xxl-1 col-sm-4">
-                        <button type="button" className="btn btn-primary w-100">
-                          {" "}
-                          <i className="ri-equalizer-fill me-1 align-bottom"></i>
-                          Filters
-                        </button>
-                      </div>
-                    </div>
-                  </form>
-                </div> */}
                 <div className="card-body">
                   <div className="table-responsive table-card mb-4">
-                    <table
-                      className="table align-middle table-nowrap mb-0"
-                      id="ticketTable"
-                    >
+                    <table className="table align-middle table-nowrap mb-0">
                       <thead>
                         <tr>
                           <th scope="col" style={{ width: "40px" }}>
@@ -116,216 +334,181 @@ function GangList() {
                         </tr>
                       </thead>
                       <tbody className="list form-check-all">
-                        <tr>
-                          <th scope="row">1</th>
-                          <td>Gang 1</td>
-                          <td>9898989898</td>
-                          <td>Shanti devi</td>
-                          <td>Shuhag Nagar_20041</td>
-                          <td>32426123123SNU</td>
-                          <td>
-                            <ul className="list-inline hstack gap-2 mb-0">
-                              <li
-                                className="list-inline-item"
-                                data-bs-toggle="tooltip"
-                                data-bs-trigger="hover"
-                                data-bs-placement="top"
-                                title=""
-                                data-bs-original-title="View"
-                              >
-                                <i className="ri-eye-fill align-bottom text-muted"></i>
-                              </li>
-                              <li
-                                className="list-inline-item"
-                                data-bs-toggle="tooltip"
-                                data-bs-trigger="hover"
-                                data-bs-placement="top"
-                                title=""
-                                data-bs-original-title="U"
-                              >
-                                <a
-                                  className="edit-item-btn"
-                                  href="#showModal"
-                                  data-bs-toggle="modal"
+                        {gangList &&
+                          gangList.length > 0 &&
+                          gangList.map((gang, index) => (
+                            <tr key={gang._id}>
+                              <td scope="row">{index + 1}</td>
+                              <td>{gang.gangName}</td>
+                              <td>{gang.gangMobile}</td>
+                              <td>{gang.gangLeaderName}</td>
+                              <td>{gang.substation}</td>
+                              <td>{gang.feeder}</td>
+                              <td>
+                                <button
+                                  className="btn btn-danger me-2"
+                                  onClick={() => deleteGang(gang._id)}
                                 >
-                                  <i className="ri-pencil-fill align-bottom text-muted"></i>
-                                </a>
-                              </li>
-                            </ul>
-                          </td>
-                        </tr>
+                                  Delete
+                                </button>
+                                <button
+                                  className="btn btn-primary"
+                                  onClick={() => {
+                                    getGangData(gang._id);
+                                    setGangData((prevGangData) => ({
+                                      ...prevGangData,
+                                      gangID: gang._id,
+                                    }));
+                                  }}
+                                >
+                                  Edit
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
                       </tbody>
                     </table>
-                    <div className="noresult" style={{ display: "none" }}>
-                      <div className="text-center">
-                        <lord-icon
-                          src="https://cdn.lordicon.com/msoeawqm.json"
-                          trigger="loop"
-                          colors="primary:#121331,secondary:#08a88a"
-                          style={{ width: "75px", height: "75px" }}
-                        ></lord-icon>
-                        <h5 className="mt-2">Sorry! No Result Found</h5>
-                        <p className="text-muted mb-0">
-                          We've searched more than 150+ Complaints We did not
-                          find any Complaints for you search.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="d-flex justify-content-end mt-2">
-                    <div className="pagination-wrap hstack gap-2">
-                      <a
-                        className="page-item pagination-prev disabled"
-                        href="#"
-                      >
-                        Previous
-                      </a>
-                      <ul className="pagination listjs-pagination mb-0"></ul>
-                      <a className="page-item pagination-next" href="#">
-                        Next
-                      </a>
-                    </div>
-                  </div>
-                  <div
-                    className="modal fade flip"
-                    id="deleteOrder"
-                    tabIndex="-1"
-                    aria-hidden="true"
-                  >
-                    <div className="modal-dialog modal-dialog-centered">
-                      <div className="modal-content">
-                        <div className="modal-body p-5 text-center">
-                          <lord-icon
-                            src="https://cdn.lordicon.com/gsqxdxog.json"
-                            trigger="loop"
-                            colors="primary:#405189,secondary:#f06548"
-                            style={{ height: "90px", width: "90px" }}
-                          ></lord-icon>
-                          <div className="mt-4 text-center">
-                            <h4>You are about to delete a order ?</h4>
-                            <p className="text-muted fs-14 mb-4">
-                              Deleting your order will remove all of your
-                              information from our database.
-                            </p>
-                            <div className="hstack gap-2 justify-content-center remove">
-                              <button
-                                className="btn btn-link link-success fw-medium text-decoration-none"
-                                data-bs-dismiss="modal"
-                              >
-                                <i className="ri-close-line me-1 align-middle"></i>{" "}
-                                Close
-                              </button>
-                              <button
-                                className="btn btn-danger"
-                                id="delete-record"
-                              >
-                                Yes, Delete It
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-
-          <div
-            className="modal fade zoomIn"
-            id="showModal"
-            tabIndex="-1"
-            aria-labelledby="exampleModalLabel"
-            aria-hidden="true"
+          <Dialog
+            open={open}
+            TransitionComponent={Transition}
+            keepMounted
+            onClose={handleClose}
+            aria-describedby="alert-dialog-slide-description"
           >
-            <div className="modal-dialog modal-dialog-centered modal-lg">
-              <div className="modal-content border-0">
-                <div className="modal-header p-3 bg-soft-info">
-                  <h5 className="modal-title" id="exampleModalLabel"></h5>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    data-bs-dismiss="modal"
-                    aria-label="Close"
-                    id="close-modal"
-                  ></button>
+            <DialogTitle>{mode === "add" ? "Add" : "Update"} Gang</DialogTitle>
+            <DialogContent>
+              <form onSubmit={mode === "add" ? addGang : updateGang}>
+                <div className="modal-body">
+                  <div className="row g-3">
+                    <div className="col-lg-6">
+                      <div id="modal-id">
+                        <label className="form-label">Gang Name</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Gang Name"
+                          name="gangName"
+                          value={gangData.gangName}
+                          onChange={handleChange}
+                        />
+                      </div>
+                    </div>
+                    <div className="col-lg-6">
+                      <div>
+                        <label className="form-label">Mobile No.</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Mobile No."
+                          name="gangMobile"
+                          value={gangData.gangMobile}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="col-lg-6">
+                      <div>
+                        <label className="form-label">Gang Leader Name</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Gang Leader Name"
+                          name="gangLeaderName"
+                          value={gangData.gangLeaderName}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="col-lg-6">
+                      <label className="form-label">Feeder</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Feeder"
+                        name="feeder"
+                        value={gangData.feeder}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+                    <div className="col-lg-6">
+                      <label className="form-label">Location</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Location"
+                        name="location"
+                        value={gangData.location}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+                    <div className="col-lg-6">
+                      <label className="form-label">Is tools available?</label>
+                      <div>
+                        <div className="form-check form-check-inline">
+                          <input
+                            className="form-check-input"
+                            type="radio"
+                            name="tools_availabe"
+                            value="yes"
+                            checked={gangData.tools_availabe === "yes"}
+                            onChange={handleChange}
+                            required
+                          />
+                          <label
+                            className="form-check-label"
+                            htmlFor="toolsAvailableYes"
+                          >
+                            Yes
+                          </label>
+                        </div>
+                        <div className="form-check form-check-inline">
+                          <input
+                            className="form-check-input"
+                            type="radio"
+                            name="tools_availabe"
+                            checked={gangData.tools_availabe === "no"}
+                            value="no"
+                            onChange={handleChange}
+                            required
+                          />
+                          <label
+                            className="form-check-label"
+                            htmlFor="toolsAvailableNo"
+                          >
+                            No
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <form>
-                  <div className="modal-body">
-                    <div className="row g-3">
-                      <div className="col-lg-6">
-                        <div id="modal-id">
-                          <label className="form-label">Gang Name</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Gang Name"
-                            value="Gang 2"
-                            readOnly
-                          />
-                        </div>
-                      </div>
-                      <div className="col-lg-6">
-                        <div>
-                          <label className="form-label">Mobile No.</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Mobile No."
-                            required
-                          />
-                        </div>
-                      </div>
-                      <div className="col-lg-6">
-                        <div>
-                          <label className="form-label">Gang Leader Name</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Gang Leader Name"
-                            required
-                          />
-                        </div>
-                      </div>
-                      <div className="col-lg-6">
-                        <div>
-                          <label className="form-label">Sub Station</label>
-                          <select className="form-control">
-                            <option>Select Sub-Station</option>
-                          </select>
-                        </div>
-                      </div>
-                      <div className="col-lg-6">
-                        <label className="form-label">Feeder</label>
-                        <select className="form-control">
-                          <option>Select Feeder</option>
-                        </select>
-                      </div>
-                    </div>
+                <div className="modal-footer">
+                  <div className="hstack gap-2 justify-content-end">
+                    <button
+                      type="button"
+                      className="btn btn-light"
+                      data-bs-dismiss="modal"
+                    >
+                      Close
+                    </button>
+                    <button type="submit" className="btn btn-success">
+                      {mode === "add" ? "Add" : "Update"} Gang
+                    </button>
                   </div>
-                  <div className="modal-footer">
-                    <div className="hstack gap-2 justify-content-end">
-                      <button
-                        type="button"
-                        className="btn btn-light"
-                        data-bs-dismiss="modal"
-                      >
-                        Close
-                      </button>
-                      <button
-                        type="submit"
-                        className="btn btn-success"
-                        id="add-btn"
-                      >
-                        Add Gang
-                      </button>
-                    </div>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </Layout>

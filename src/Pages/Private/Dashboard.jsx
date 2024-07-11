@@ -1,10 +1,18 @@
 import Layout from "../../Component/Layout";
 import { useUserContext } from "../../hooks/userContext";
-import { useEffect, useState } from "react";
+import { forwardRef, useEffect, useState } from "react";
 import { apiUrl } from "../../Constant";
 import moment from "moment";
 import Loader from "../../Component/Loader";
 import axios from "axios";
+import Dialog from "@mui/material/Dialog";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
+import Slide from "@mui/material/Slide";
+const Transition = forwardRef(function Transition(props, ref) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
+
 const complaintStatus = [
   "Open",
   "Assigned",
@@ -14,12 +22,15 @@ const complaintStatus = [
   "Resolved",
 ];
 function Dashboard() {
-  const { user, token } = useUserContext();
+  const { user, token, setCustomMsg } = useUserContext();
   const [greet, setGreet] = useState("");
   const [complaint, setComplaint] = useState(null);
   const [count, setCount] = useState(null);
   const [showLoader, setShowLoader] = useState(false);
   const [status, setStatus] = useState("");
+  const [gangList, setGangList] = useState(null);
+  const [open, setOpen] = useState(false);
+  const [complaintId, setComplaintId] = useState("");
 
   function formatDate(dateString) {
     // Parse the date string using Moment.js
@@ -34,6 +45,11 @@ function Dashboard() {
       fetchComplaint();
     }
   }, [token, status]);
+  useEffect(() => {
+    if (token !== "") {
+      fetchGang();
+    }
+  }, [token]);
 
   const fetchComplaint = () => {
     setShowLoader(true);
@@ -78,8 +94,68 @@ function Dashboard() {
       return "Good Evening";
     }
   };
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
 
-  //if (complaint === null) return <Loader />;
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const fetchGang = () => {
+    setShowLoader(true);
+    const data = {
+      search: "",
+      gangID: "",
+    };
+    axios
+      .post(`${apiUrl}list-gang`, data, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        console.log("Response:", response);
+        setGangList(response?.data?.gangs);
+        setShowLoader(false);
+      })
+      .catch((error) => {
+        setShowLoader(false);
+        console.log(error);
+      });
+  };
+
+  const assignComplaint = (gangId) => {
+    setShowLoader(true);
+    const data = {
+      complain_no: complaintId,
+      gang_id: gangId,
+    };
+    axios
+      .put(`${apiUrl}assign-complain`, data, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        console.log("Response:", response);
+        setOpen(false);
+        setCustomMsg((prevMsg) => ({
+          ...prevMsg,
+          isVisible: true,
+          text: response?.data?.message,
+          type: "success",
+        }));
+        setShowLoader(false);
+      })
+      .catch((error) => {
+        setShowLoader(false);
+        console.log(error);
+      });
+  };
+
   return (
     <Layout>
       {showLoader && <Loader />}
@@ -372,9 +448,10 @@ function Dashboard() {
                                     {complaint.complaintStatus === "Open" && (
                                       <button
                                         className="btn btn-primary"
-                                        onClick={() =>
-                                          gangAssign(complaint._id)
-                                        }
+                                        onClick={() => {
+                                          setOpen(true);
+                                          setComplaintId(complaint._id);
+                                        }}
                                       >
                                         Assign to Gang
                                       </button>
@@ -401,6 +478,56 @@ function Dashboard() {
           </div>
         </div>
       </div>
+      <Dialog
+        open={open}
+        TransitionComponent={Transition}
+        keepMounted
+        onClose={handleClose}
+        maxWidth="lg"
+      >
+        <DialogTitle>Gang List</DialogTitle>
+        <DialogContent>
+          <div className="table-responsive table-card mb-4">
+            <table className="table align-middle table-nowrap mb-0">
+              <thead>
+                <tr>
+                  <th scope="col" style={{ width: "40px" }}>
+                    S.No.
+                  </th>
+                  <th>Gang Name</th>
+                  <th>Gang Mobile</th>
+                  <th>Gang Leader Name</th>
+                  <th>Sub Station</th>
+                  <th>Feeder</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody className="list form-check-all">
+                {gangList &&
+                  gangList.length > 0 &&
+                  gangList.map((gang, index) => (
+                    <tr key={gang._id}>
+                      <td scope="row">{index + 1}</td>
+                      <td>{gang.gangName}</td>
+                      <td>{gang.gangMobile}</td>
+                      <td>{gang.gangLeaderName}</td>
+                      <td>{gang.substation}</td>
+                      <td>{gang.feeder}</td>
+                      <td>
+                        <button
+                          className="btn btn-primary"
+                          onClick={() => assignComplaint(gang._id)}
+                        >
+                          Assign Complaint
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }

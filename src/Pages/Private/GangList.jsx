@@ -8,6 +8,8 @@ import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import Slide from "@mui/material/Slide";
+import CloseIcon from "@mui/icons-material/Close";
+import { Fab } from "@mui/material";
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
@@ -21,7 +23,7 @@ function GangList() {
   const [mode, setMode] = useState("add");
   const [userList, setUserList] = useState(null);
   const [selectedGang, setSelectedGang] = useState("");
-
+  const [subStationList, setSubStationList] = useState([]);
   const [gangData, setGangData] = useState({
     gangID: "",
     gangLeaderName: "",
@@ -30,7 +32,8 @@ function GangList() {
     gangMobile: "",
     tools_availabe: "",
     location: "",
-    substation: "",
+    subStation: "",
+
     feeder: "",
     security_equipment: [
       {
@@ -40,16 +43,15 @@ function GangList() {
     ],
     latitude: "",
     longitude: "",
-    substation_id: "",
   });
 
   useEffect(() => {
     if (user?.substation_id !== undefined) {
-      setGangData((prevGangData) => ({
+      /*  setGangData((prevGangData) => ({
         ...prevGangData,
         substation_id: user.substation_id,
         substation: user.sub_station_name,
-      }));
+      })); */
 
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
@@ -73,6 +75,7 @@ function GangList() {
     if (token !== "") {
       fetchGang();
       getMembers();
+      fetchSubstation();
     }
   }, [token]);
 
@@ -109,6 +112,26 @@ function GangList() {
       .then((response) => {
         console.log("Response:", response);
         setGangList(response?.data?.gangs);
+        setShowLoader(false);
+      })
+      .catch((error) => {
+        setShowLoader(false);
+        console.log(error);
+      });
+  };
+  const fetchSubstation = () => {
+    setShowLoader(true);
+    const data = {};
+    axios
+      .post(`${apiUrl}list-substation`, data, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        console.log("Response:", response);
+        setSubStationList(response?.data?.substationList);
         setShowLoader(false);
       })
       .catch((error) => {
@@ -165,12 +188,11 @@ function GangList() {
       gangMobile: gangData.gangMobile,
       tools_availabe: gangData.tools_availabe,
       location: gangData.location,
-      substation: gangData.substation,
       feeder: gangData.feeder,
       security_equipment: gangData.security_equipment,
       latitude: gangData.latitude,
       longitude: gangData.longitude,
-      substation_id: gangData.substation_id,
+      substation_id: gangData.subStation,
     };
     axios
       .post(`${apiUrl}add-gang`, data, {
@@ -196,7 +218,10 @@ function GangList() {
         console.log(error);
       });
   };
+
   const updateGang = (e) => {
+    console.log(gangData.subStation);
+    //alert("gangData.subStation:", gangData.subStation);
     e.preventDefault();
     setShowLoader(true);
     const data = {
@@ -207,7 +232,7 @@ function GangList() {
       gangMobile: gangData.gangMobile,
       tools_availabe: gangData.tools_availabe,
       location: gangData.location,
-      substation: gangData.substation,
+      substation_id: gangData.subStation,
       feeder: gangData.feeder,
       security_equipment: [
         {
@@ -217,9 +242,8 @@ function GangList() {
       ],
       latitude: gangData.latitude,
       longitude: gangData.longitude,
-      substation_id: gangData.substation_id,
     };
-    console.log("-- ", gangData);
+    console.log("-- ", data);
     //return;
     axios
       .put(`${apiUrl}edit-gang`, data, {
@@ -269,6 +293,7 @@ function GangList() {
           feeder,
           location,
           tools_availabe,
+          substation_id,
         } = response.data.gangs[0];
         setGangData((prevGangData) => ({
           ...prevGangData,
@@ -279,6 +304,7 @@ function GangList() {
           feeder: feeder,
           location: location,
           tools_availabe: tools_availabe,
+          subStation: substation_id,
         }));
         setOpen(true);
         setShowLoader(false);
@@ -337,6 +363,7 @@ function GangList() {
         }));
         setShowLoader(false);
         getMembers();
+        fetchGang();
         setShowLoader(false);
       })
       .catch((error) => {
@@ -367,6 +394,7 @@ function GangList() {
           type: "success",
         }));
         setShowLoader(false);
+        fetchGang();
       })
       .catch((error) => {
         setShowLoader(false);
@@ -425,10 +453,11 @@ function GangList() {
                           </th>
                           <th>Gang Name</th>
                           <th>Gang Mobile</th>
-                          <th>Gang Leader Name</th>
+                          {/* <th>Gang Leader Name</th> */}
                           <th>Sub Station</th>
                           <th>Feeder</th>
-                          <th>Action</th>
+                          {/* <th>Members</th> */}
+                          <th align="center">Action</th>
                         </tr>
                       </thead>
                       <tbody className="list form-check-all">
@@ -439,11 +468,20 @@ function GangList() {
                               <td scope="row">{index + 1}</td>
                               <td>{gang.gangName}</td>
                               <td>{gang.gangMobile}</td>
-                              <td>{gang.gangLeaderName}</td>
+                              {/* <td>{gang.gangLeaderName}</td> */}
                               <td>{gang.substation}</td>
+
                               <td>{gang.feeder}</td>
+                              {/* <td>
+                                {gang?.members?.length > 0 &&
+                                  gang.members.map((member, index) => (
+                                    <p className="mb-0" key={member.memberIDIs}>
+                                      {index + 1}: {member.name}
+                                    </p>
+                                  ))}
+                              </td> */}
                               <td>
-                                <button
+                                {/* <button
                                   className="btn btn-success me-2"
                                   onClick={() => {
                                     setSelectedGang(gang._id);
@@ -451,7 +489,7 @@ function GangList() {
                                   }}
                                 >
                                   Assign Member
-                                </button>
+                                </button> */}
                                 <button
                                   disabled={showLoader}
                                   className="btn btn-danger me-2"
@@ -523,18 +561,45 @@ function GangList() {
                     </div>
                     <div className="col-lg-6">
                       <div>
-                        <label className="form-label">Gang Leader Name</label>
-                        <input
-                          type="text"
+                        <label className="form-label">Sub Station</label>
+                        <select
                           className="form-control"
-                          placeholder="Gang Leader Name"
-                          name="gangLeaderName"
-                          value={gangData.gangLeaderName}
+                          name="subStation"
                           onChange={handleChange}
-                          required
-                        />
+                          value={gangData.subStation}
+                          defaultValue={""}
+                        >
+                          <option value={""}>Select</option>
+                          {subStationList &&
+                            subStationList.map((subStation) => (
+                              <option
+                                key={subStation._id}
+                                value={subStation._id}
+                              >
+                                {subStation.sub_station_name}
+                              </option>
+                            ))}
+                        </select>
                       </div>
                     </div>
+                    {/* <div className="col-lg-6">
+                      <div>
+                        <label className="form-label">Gang Leader Name</label>
+                        <select
+                          className="form-control"
+                          name="gangLeaderName"
+                          onChange={handleChange}
+                          value={gangData.gangLeaderName}
+                        >
+                          {userList &&
+                            userList.map((member) => (
+                              <option key={member._id} value={member._id}>
+                                {member.name}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+                    </div> */}
 
                     <div className="col-lg-6">
                       <label className="form-label">Feeder</label>
@@ -606,7 +671,7 @@ function GangList() {
                     <button
                       type="button"
                       className="btn btn-light"
-                      data-bs-dismiss="modal"
+                      onClick={() => handleClose()}
                     >
                       Close
                     </button>
@@ -630,7 +695,18 @@ function GangList() {
             onClose={() => setOpenMember(false)}
             aria-describedby="alert-dialog-slide-description"
           >
-            <DialogTitle> Members List</DialogTitle>
+            <DialogTitle>
+              {" "}
+              Members List{" "}
+              <Fab
+                className="float-end"
+                sx={{ marginLeft: "auto" }}
+                size="small"
+                onClick={() => setOpenMember(false)}
+              >
+                <CloseIcon />
+              </Fab>
+            </DialogTitle>
             <DialogContent>
               <div className="table-responsive table-card mb-4">
                 <table className="table align-middle table-nowrap mb-0">
@@ -639,8 +715,8 @@ function GangList() {
                       <th scope="col" style={{ width: "40px" }}>
                         S.No.
                       </th>
-                      <th>Gang Name</th>
-                      <th>Gang Mobile</th>
+                      <th>Name</th>
+                      <th>Mobile</th>
                       <th>Action</th>
                     </tr>
                   </thead>

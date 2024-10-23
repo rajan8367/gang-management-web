@@ -13,7 +13,7 @@ function Footer() {
           <div className="col-sm-6">{year} © UPPCL.</div>
           <div className="col-sm-6">
             <div className="text-sm-end d-none d-sm-block">
-              Design & Develop by Velocis
+              Design & Develop by UPPCL
             </div>
           </div>
         </div>

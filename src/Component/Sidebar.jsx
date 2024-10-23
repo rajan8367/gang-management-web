@@ -91,6 +91,58 @@ function Sidebar() {
                 <span data-key="t-apps">Gang Management</span>
               </Link>
             </li>
+            <li className="nav-item">
+              <Link
+                to="/category-list"
+                className={`${
+                  pathname === "/category-list"
+                    ? "nav-link menu-link active"
+                    : "nav-link menu-link "
+                } `}
+              >
+                <i className="ri-tools-fill"></i>{" "}
+                <span data-key="t-apps">Gang Category</span>
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link
+                to="/equipment-list"
+                className={`${
+                  pathname === "/equipment-list"
+                    ? "nav-link menu-link active"
+                    : "nav-link menu-link "
+                } `}
+              >
+                <i className="ri-shield-line"></i>
+                <span data-key="t-apps">Safety Equipment</span>
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link
+                to="/item-list"
+                className={`${
+                  pathname === "/item-list"
+                    ? "nav-link menu-link active"
+                    : "nav-link menu-link "
+                } `}
+              >
+                <i className="ri-file-text-line"></i>
+                <span data-key="t-apps">Consumable Items</span>
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link
+                to="/dispatcher-list"
+                className={`${
+                  pathname === "/dispatcher-list"
+                    ? "nav-link menu-link active"
+                    : "nav-link menu-link "
+                } `}
+              >
+                <i className="ri-truck-line"></i>
+                <span data-key="t-apps">Dispatcher</span>
+              </Link>
+            </li>
           </ul>
         </div>
       </div>

@@ -9,6 +9,14 @@ import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import Slide from "@mui/material/Slide";
+import totalCount from "./../../assets/images/report.png";
+import openCount from "./../../assets/images/maintenance.png";
+import inProgressCount from "./../../assets/images/rpa.png";
+import resolved from "./../../assets/images/resolved.png";
+import assignment from "./../../assets/images/assignment.png";
+import hold from "./../../assets/images/hold.png";
+import { useNavigate } from "react-router-dom";
+
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
@@ -17,12 +25,12 @@ const complaintStatus = [
   "Open",
   "Assigned",
   "InProgress",
-  "Closed",
   "OnHold",
   "Resolved",
 ];
 function Dashboard() {
-  const { user, token, setCustomMsg } = useUserContext();
+  const { user, token, setCustomMsg, userType } = useUserContext();
+  const navigate = useNavigate();
   const [greet, setGreet] = useState("");
   const [complaint, setComplaint] = useState(null);
   const [count, setCount] = useState(null);
@@ -31,6 +39,7 @@ function Dashboard() {
   const [gangList, setGangList] = useState(null);
   const [open, setOpen] = useState(false);
   const [complaintId, setComplaintId] = useState("");
+  const [assignType, setAssignType] = useState("");
 
   function formatDate(dateString) {
     // Parse the date string using Moment.js
@@ -80,6 +89,16 @@ function Dashboard() {
       })
       .catch((error) => {
         setShowLoader(false);
+        if (error?.response?.data?.message === "error in token") {
+          setCustomMsg((prevMsg) => ({
+            ...prevMsg,
+            isVisible: true,
+            text: "Token has been expired.",
+            type: "error",
+          }));
+          localStorage.clear();
+          navigate("/", { replace: true });
+        }
         console.log(error);
       });
   };
@@ -148,6 +167,7 @@ function Dashboard() {
           text: response?.data?.message,
           type: "success",
         }));
+        fetchComplaint();
         setShowLoader(false);
       })
       .catch((error) => {
@@ -156,6 +176,39 @@ function Dashboard() {
       });
   };
 
+  const reAssignComplaint = (gangId) => {
+    setShowLoader(true);
+    const data = {
+      complain_no: complaintId,
+      gang_id: gangId,
+    };
+    axios
+      .put(`${apiUrl}re-assign-complain`, data, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        console.log("Response:", response);
+        setOpen(false);
+        setCustomMsg((prevMsg) => ({
+          ...prevMsg,
+          isVisible: true,
+          text: response?.data?.message,
+          type: "success",
+        }));
+        fetchComplaint();
+        setShowLoader(false);
+      })
+      .catch((error) => {
+        setShowLoader(false);
+        console.log(error);
+      });
+  };
+  const viewDetail = (complaintId) => {
+    navigate("/complaint-detail/" + complaintId);
+  };
   return (
     <Layout>
       {showLoader && <Loader />}
@@ -185,13 +238,13 @@ function Dashboard() {
                     <div className="d-flex align-items-lg-center flex-lg-row flex-column">
                       <div className="flex-grow-1">
                         <h4 className="fs-16 mb-1">
-                          {greet}, {user?.name}!
+                          {greet}, {user?.DIVISION_NAME}!
                         </h4>
-                        <p className="text-muted mb-0">
+                        {/* <p className="text-muted mb-0">
                           {user?.type} ({user?.sub_station_name})
-                        </p>
+                        </p> */}
                       </div>
-                      <div className="mt-3 mt-lg-0">
+                      {/* <div className="mt-3 mt-lg-0">
                         <form action="#">
                           <div className="row g-3 mb-0 align-items-center">
                             <div className="col-sm-auto">
@@ -211,13 +264,20 @@ function Dashboard() {
                             </div>
                           </div>
                         </form>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 </div>
                 <div className="row">
-                  <div className="col-xl-3 col-md-6">
-                    <div className="card card-animate">
+                  <div
+                    className="col-xl-2 col-md-6 cursor-pointer"
+                    onClick={() => setStatus("")}
+                  >
+                    <div
+                      className={`card card-animate ${
+                        status === "" && "border border-success"
+                      }`}
+                    >
                       <div className="card-body">
                         <div className="d-flex align-items-center">
                           <div className="flex-grow-1 overflow-hidden">
@@ -226,16 +286,10 @@ function Dashboard() {
                               Total Complaints
                             </p>
                           </div>
-                          <div className="flex-shrink-0">
-                            <h5 className="text-success fs-14 mb-0">
-                              {/* <i className="ri-arrow-right-up-line fs-13 align-middle"></i>{" "}
-                              +16.24 % */}
-                            </h5>
-                          </div>
                         </div>
                         <div className="d-flex align-items-end justify-content-between mt-4">
                           <div>
-                            <h4 className="fs-22 fw-semibold ff-secondary mb-4">
+                            <h4 className="fs-22 fw-semibold ff-secondary">
                               <span className="counter-value" data-target="559">
                                 {count &&
                                   Object.values(count).reduce(
@@ -244,24 +298,26 @@ function Dashboard() {
                                   )}
                               </span>{" "}
                             </h4>
-                            <a
-                              href="complaint-list.html"
-                              className="text-decoration-underline"
-                            >
-                              View All
-                            </a>
                           </div>
                           <div className="avatar-sm flex-shrink-0">
                             <span className="avatar-title bg-soft-success rounded fs-3">
-                              <i className="bx bx-dollar-circle text-success"></i>
+                              <img src={totalCount} className="img-fluid" />
                             </span>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div className="col-xl-3 col-md-6">
-                    <div className="card card-animate">
+
+                  <div
+                    className="col-xl-2 col-md-6"
+                    onClick={() => setStatus("Open")}
+                  >
+                    <div
+                      className={`card card-animate ${
+                        status === "Open" && "border border-success"
+                      }`}
+                    >
                       <div className="card-body">
                         <div className="d-flex align-items-center">
                           <div className="flex-grow-1 overflow-hidden">
@@ -278,29 +334,81 @@ function Dashboard() {
                         </div>
                         <div className="d-flex align-items-end justify-content-between mt-4">
                           <div>
-                            <h4 className="fs-22 fw-semibold ff-secondary mb-4">
+                            <h4 className="fs-22 fw-semibold ff-secondary">
                               <span className="counter-value" data-target="368">
                                 {count?.Open}
                               </span>
                             </h4>
-                            <a
+                            {/* <a
                               href="complaint-list.html"
                               className="text-decoration-underline"
                             >
                               View all
-                            </a>
+                            </a> */}
                           </div>
                           <div className="avatar-sm flex-shrink-0">
                             <span className="avatar-title bg-soft-info rounded fs-3">
-                              <i className="bx bx-shopping-bag text-info"></i>
+                              <img src={openCount} className="img-fluid" />
                             </span>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div className="col-xl-3 col-md-6">
-                    <div className="card card-animate">
+
+                  <div
+                    className={`col-xl-2 col-md-6 cursor-pointer`}
+                    onClick={() => setStatus("Assigned")}
+                  >
+                    <div
+                      className={`card card-animate ${
+                        status === "Closed" && "border border-success"
+                      }`}
+                    >
+                      <div className="card-body">
+                        <div className="d-flex align-items-center">
+                          <div className="flex-grow-1 overflow-hidden">
+                            <p className="text-uppercase fw-medium text-muted text-truncate mb-0">
+                              {" "}
+                              Assigned
+                            </p>
+                          </div>
+                          {/* <div className="flex-shrink-0">
+                            <h5 className="text-muted fs-14 mb-0">+0.01 %</h5>
+                          </div> */}
+                        </div>
+                        <div className="d-flex align-items-end justify-content-between mt-4">
+                          <div>
+                            <h4 className="fs-22 fw-semibold ff-secondary">
+                              <span className="counter-value" data-target="165">
+                                {count?.Assigned}
+                              </span>
+                            </h4>
+                            {/*  <a
+                              href="complaint-list.html"
+                              className="text-decoration-underline"
+                            >
+                              See details
+                            </a> */}
+                          </div>
+                          <div className="avatar-sm flex-shrink-0">
+                            <span className="avatar-title bg-soft-primary rounded fs-3">
+                              <img src={assignment} className="img-fluid" />
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    className="col-xl-2 col-md-6 cursor-pointer"
+                    onClick={() => setStatus("InProgress")}
+                  >
+                    <div
+                      className={`card card-animate ${
+                        status === "InProgress" && "border border-success"
+                      }`}
+                    >
                       <div className="card-body">
                         <div className="d-flex align-items-center">
                           <div className="flex-grow-1 overflow-hidden">
@@ -317,32 +425,43 @@ function Dashboard() {
                         </div>
                         <div className="d-flex align-items-end justify-content-between mt-4">
                           <div>
-                            <h4 className="fs-22 fw-semibold ff-secondary mb-4">
+                            <h4 className="fs-22 fw-semibold ff-secondary">
                               <span className="counter-value" data-target="66">
                                 {count?.InProgress}
                               </span>{" "}
                             </h4>
-                            <a href="#" className="text-decoration-underline">
+                            {/* <a href="#" className="text-decoration-underline">
                               See details
-                            </a>
+                            </a> */}
                           </div>
                           <div className="avatar-sm flex-shrink-0">
                             <span className="avatar-title bg-soft-warning rounded fs-3">
-                              <i className="bx bx-user-circle text-warning"></i>
+                              <img
+                                src={inProgressCount}
+                                className="img-fluid"
+                              />
                             </span>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div className="col-xl-3 col-md-6">
-                    <div className="card card-animate">
+
+                  <div
+                    className={`col-xl-2 col-md-6 cursor-pointer`}
+                    onClick={() => setStatus("OnHold")}
+                  >
+                    <div
+                      className={`card card-animate ${
+                        status === "Closed" && "border border-success"
+                      }`}
+                    >
                       <div className="card-body">
                         <div className="d-flex align-items-center">
                           <div className="flex-grow-1 overflow-hidden">
                             <p className="text-uppercase fw-medium text-muted text-truncate mb-0">
                               {" "}
-                              Closed
+                              On Hold
                             </p>
                           </div>
                           {/* <div className="flex-shrink-0">
@@ -351,21 +470,66 @@ function Dashboard() {
                         </div>
                         <div className="d-flex align-items-end justify-content-between mt-4">
                           <div>
-                            <h4 className="fs-22 fw-semibold ff-secondary mb-4">
+                            <h4 className="fs-22 fw-semibold ff-secondary">
                               <span className="counter-value" data-target="165">
-                                {count?.Closed}
+                                {count?.Hold}
                               </span>
                             </h4>
-                            <a
+                            {/*  <a
                               href="complaint-list.html"
                               className="text-decoration-underline"
                             >
                               See details
-                            </a>
+                            </a> */}
                           </div>
                           <div className="avatar-sm flex-shrink-0">
                             <span className="avatar-title bg-soft-primary rounded fs-3">
-                              <i className="bx bx-wallet text-primary"></i>
+                              <img src={hold} className="img-fluid" />
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    className={`col-xl-2 col-md-6 cursor-pointer`}
+                    onClick={() => setStatus("Resolved")}
+                  >
+                    <div
+                      className={`card card-animate ${
+                        status === "Closed" && "border border-success"
+                      }`}
+                    >
+                      <div className="card-body">
+                        <div className="d-flex align-items-center">
+                          <div className="flex-grow-1 overflow-hidden">
+                            <p className="text-uppercase fw-medium text-muted text-truncate mb-0">
+                              {" "}
+                              Resolved
+                            </p>
+                          </div>
+                          {/* <div className="flex-shrink-0">
+                            <h5 className="text-muted fs-14 mb-0">+0.01 %</h5>
+                          </div> */}
+                        </div>
+                        <div className="d-flex align-items-end justify-content-between mt-4">
+                          <div>
+                            <h4 className="fs-22 fw-semibold ff-secondary">
+                              <span className="counter-value" data-target="165">
+                                {count?.Resolved}
+                              </span>
+                            </h4>
+                            {/*  <a
+                              href="complaint-list.html"
+                              className="text-decoration-underline"
+                            >
+                              See details
+                            </a> */}
+                          </div>
+                          <div className="avatar-sm flex-shrink-0">
+                            <span className="avatar-title bg-soft-primary rounded fs-3">
+                              <img src={resolved} className="img-fluid" />
                             </span>
                           </div>
                         </div>
@@ -401,6 +565,7 @@ function Dashboard() {
                               <button
                                 className="dropdown-item"
                                 onClick={() => setStatus("")}
+                                disabled={showLoader}
                               >
                                 All Complaints
                               </button>
@@ -409,6 +574,7 @@ function Dashboard() {
                                   key={status}
                                   className="dropdown-item"
                                   onClick={() => setStatus(status)}
+                                  disabled={showLoader}
                                 >
                                   {status}
                                 </button>
@@ -417,8 +583,8 @@ function Dashboard() {
                           </div>
                         </div>
                       </div>
-                      <div className="table-responsive px-4 mt-4 table-card">
-                        <table className="table table-nowrap table-centered align-middle">
+                      <div className="table-responsive px-4 mt-4 table-card overflow-auto">
+                        <table className="table table-centered align-middle text-nowrap">
                           <thead className="bg-light text-muted">
                             <tr>
                               <th>S.No.</th>
@@ -428,7 +594,9 @@ function Dashboard() {
                               <th>Consumer Address</th>
                               <th>Date</th>
                               <th>Status</th>
-                              <th>Action</th>
+                              <th>Assigned To</th>
+                              <th>Re Assign</th>
+                              <th>View</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -445,17 +613,45 @@ function Dashboard() {
                                   </td>
                                   <td>{complaint.complaintStatus}</td>
                                   <td>
-                                    {complaint.complaintStatus === "Open" && (
+                                    {complaint.complaintStatus === "Open" ? (
                                       <button
                                         className="btn btn-primary"
                                         onClick={() => {
                                           setOpen(true);
                                           setComplaintId(complaint._id);
+                                          setAssignType("assign");
                                         }}
+                                        disabled={showLoader}
                                       >
                                         Assign to Gang
                                       </button>
+                                    ) : (
+                                      complaint?.gangDetail?.gangName
                                     )}
+                                  </td>
+                                  <td>
+                                    {complaint.complaintStatus ===
+                                      "Assigned" && (
+                                      <button
+                                        className="btn btn-success"
+                                        onClick={() => {
+                                          setOpen(true);
+                                          setComplaintId(complaint._id);
+                                          setAssignType("reAssign");
+                                        }}
+                                        disabled={showLoader}
+                                      >
+                                        Re Assign
+                                      </button>
+                                    )}
+                                  </td>
+                                  <td>
+                                    <button
+                                      className="btn btn-primary"
+                                      onClick={() => viewDetail(complaint._id)}
+                                    >
+                                      View
+                                    </button>
                                   </td>
                                 </tr>
                               ))
@@ -496,7 +692,7 @@ function Dashboard() {
                   </th>
                   <th>Gang Name</th>
                   <th>Gang Mobile</th>
-                  <th>Gang Leader Name</th>
+                  {/* <th>Gang Leader Name</th> */}
                   <th>Sub Station</th>
                   <th>Feeder</th>
                   <th>Action</th>
@@ -510,16 +706,29 @@ function Dashboard() {
                       <td scope="row">{index + 1}</td>
                       <td>{gang.gangName}</td>
                       <td>{gang.gangMobile}</td>
-                      <td>{gang.gangLeaderName}</td>
+                      {/* <td>{gang.gangLeaderName}</td> */}
                       <td>{gang.substation}</td>
                       <td>{gang.feeder}</td>
                       <td>
-                        <button
-                          className="btn btn-primary"
-                          onClick={() => assignComplaint(gang._id)}
-                        >
-                          Assign Complaint
-                        </button>
+                        {assignType === "assign" ? (
+                          <button
+                            className="btn btn-primary"
+                            onClick={() => assignComplaint(gang._id)}
+                            disabled={showLoader}
+                          >
+                            Assign Complaint
+                          </button>
+                        ) : assignType === "reAssign" ? (
+                          <button
+                            className="btn btn-success"
+                            onClick={() => reAssignComplaint(gang._id)}
+                            disabled={showLoader}
+                          >
+                            Re Assign Complaint
+                          </button>
+                        ) : (
+                          "NA"
+                        )}
                       </td>
                     </tr>
                   ))}

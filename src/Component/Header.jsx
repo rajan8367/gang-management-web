@@ -5,17 +5,19 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 function Header() {
   const { pathname } = useLocation();
-  const { user, setUser, setToken, token } = useUserContext();
+  const { user, setUser, setToken, userType, setUserType } = useUserContext();
   const navigate = useNavigate();
 
   useEffect(() => {
     const userData = localStorage.getItem("userData");
     const token = localStorage.getItem("token");
+    const userType = localStorage.getItem("userType");
     if (userData === null && token === null) {
       navigate("/", { replace: true });
     } else {
       setUser(JSON.parse(userData));
       setToken(token);
+      setUserType(userType);
     }
   }, [pathname]);
   const logout = () => {
@@ -170,16 +172,6 @@ function Header() {
 
             <div className="d-flex align-items-center">
               <div className="dropdown d-md-none topbar-head-dropdown header-item">
-                {/* <button
-                  type="button"
-                  className="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle"
-                  id="page-header-search-dropdown"
-                  data-bs-toggle="dropdown"
-                  aria-haspopup="true"
-                  aria-expanded="false"
-                >
-                  <i className="bx bx-search fs-22"></i>
-                </button> */}
                 <div
                   className="dropdown-menu dropdown-menu-lg dropdown-menu-end p-0"
                   aria-labelledby="page-header-search-dropdown"
@@ -780,13 +772,13 @@ function Header() {
                         {user?.name}
                       </span>
                       <span className="d-none d-xl-block ms-1 fs-12 text-muted user-name-sub-text">
-                        {user?.role} ({user?.sub_station_name})
+                        {userType}
                       </span>
                     </span>
                   </span>
                 </button>
                 <div className="dropdown-menu dropdown-menu-end">
-                  <h6 className="dropdown-header">Welcome Mr. {user?.name}!</h6>
+                  <h6 className="dropdown-header">Welcome Mr. {userType}!</h6>
                   {/* <a className="dropdown-item" href="pages-profile.html">
                     <i className="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i>{" "}
                     <span className="align-middle">Profile</span>

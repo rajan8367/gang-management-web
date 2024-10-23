@@ -1,8 +1,4 @@
 import Layout from "../../Component/Layout";
-import transferDamage from "./../../assets/images/small/transfer-damange.png";
-import repair from "./../../assets/images/small/transfer-repair2.png";
-import repair2 from "./../../assets/images/small/transfer-repair.png";
-import transformer from "./../../assets/images/small/transform-img.png";
 import googlemapicon from "./../../assets/images/google-map-icon.png";
 import avatar from "./../../assets/images/users/avatar-8.jpg";
 import avatar7 from "./../../assets/images/users/avatar-7.jpg";
@@ -24,17 +20,13 @@ function ComplaintDetail() {
   const [tab, setTab] = useState(1);
   const [showLoader, setShowLoader] = useState(false);
   const [complaintData, setComplaintData] = useState(null);
-  const [address, setAddress] = useState("");
+  console.log("id: ", id);
   useEffect(() => {
     if (token !== "") {
       fetchComplaint();
     }
   }, [token]);
-  useEffect(() => {
-    if (complaintData) {
-      getAddressFromLatLng();
-    }
-  }, [complaintData]);
+
   const fetchComplaint = () => {
     setShowLoader(true);
     const data = {
@@ -56,24 +48,6 @@ function ComplaintDetail() {
         setShowLoader(false);
         console.log(error);
       });
-  };
-  const getAddressFromLatLng = async () => {
-    try {
-      const response = await axios.get(
-        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${complaintData?.siteDocuments[0]?.latData},${complaintData?.siteDocuments[0]?.longData}&key=AIzaSyDY8Trnj0J15trOsOS-rN6LaswdopjPWVI`
-      );
-
-      if (response.data.status === "OK") {
-        const formattedAddress = response.data.results[0].formatted_address;
-        console.log("add", formattedAddress);
-        setAddress(formattedAddress);
-      } else {
-        console.log("Unable to get the address. Please check the coordinates.");
-      }
-    } catch (error) {
-      console.error("Error fetching the address:", error);
-      //setError("An error occurred while fetching the address.");
-    }
   };
   return (
     <Layout>
@@ -177,7 +151,7 @@ function ComplaintDetail() {
                       <div className="table-responsive">
                         <table className="table align-middle table-nowrap mb-0">
                           <tbody>
-                            {/* <tr>
+                            <tr>
                               <td className="fw-medium">Site Location</td>
                               <td colSpan="3">
                                 BSD Academy Baraura Hussain Bari, Lucknow, Uttar
@@ -192,24 +166,24 @@ function ComplaintDetail() {
                                   />
                                 </a>
                               </td>
-                            </tr> */}
+                            </tr>
                             <tr>
                               <td className="fw-medium">ZONE</td>
-                              <td>{complaintData?.zone}</td>
+                              <td>LESA CIS GOMTI-2</td>
                               <td className="fw-medium">CIRCLE</td>
-                              <td>{complaintData?.circle}</td>
+                              <td>EUDC-8</td>
                             </tr>
                             <tr>
                               <td className="fw-medium">DIVISION</td>
-                              <td>{complaintData?.division}</td>
+                              <td>EDD-THAKURGANJ</td>
                               <td className="fw-medium">SUBDIVISION</td>
-                              <td>{complaintData?.subdivision}</td>
+                              <td>BALAGANJ</td>
                             </tr>
                             <tr>
                               <td className="fw-medium">SUBSTATION</td>
-                              <td>{complaintData?.substation}</td>
+                              <td>33/11 KV AZAD NAGAR</td>
                               <td className="fw-medium">DISTRICT</td>
-                              <td>{complaintData?.district}</td>
+                              <td>LUCKNOW</td>
                             </tr>
                           </tbody>
                         </table>
@@ -226,27 +200,80 @@ function ComplaintDetail() {
                 <div className="card-body">
                   <div className="live-preview">
                     <div className="row g-2  mb-2">
-                      {complaintData?.siteDocuments.length > 0 &&
-                        complaintData?.siteDocuments.map((doc) => (
-                          <div className="col-sm-3" key={doc._id}>
-                            <figure className="figure mb-0">
-                              <a
-                                className="image-popup"
-                                href="#"
-                                title="Site Photo"
-                              >
-                                <img
-                                  src={doc.documentName}
-                                  className="figure-img img-fluid rounded"
-                                  alt="Site Photo"
-                                />
-                              </a>
-                              <figcaption className="figure-caption">
-                                Uploaded By: {doc.uploadBy}
-                              </figcaption>
-                            </figure>
-                          </div>
-                        ))}
+                      <div className="col-sm-6">
+                        <figure className="figure mb-0">
+                          <a
+                            className="image-popup"
+                            href="#"
+                            title="Site Photo"
+                          >
+                            <img
+                              src={transferDamage}
+                              className="figure-img img-fluid rounded"
+                              alt="Site Photo"
+                            />
+                          </a>
+                          <figcaption className="figure-caption">
+                            Site Photograph
+                          </figcaption>
+                        </figure>
+                      </div>
+                      <div className="col-sm-6">
+                        <figure className="figure mb-0">
+                          <a
+                            className="image-popup"
+                            href="#"
+                            title="Engineer Photo with Equipments"
+                          >
+                            <img
+                              src={repair}
+                              className="figure-img img-fluid rounded"
+                              alt="Engineer Photo"
+                            />
+                          </a>
+                          <figcaption className="figure-caption">
+                            Engineer Photograph
+                          </figcaption>
+                        </figure>
+                      </div>
+                    </div>
+                    <div className="row g-2">
+                      <div className="col-sm-6">
+                        <figure className="figure mb-0">
+                          <a
+                            className="image-popup"
+                            href="#"
+                            title="Site Photo"
+                          >
+                            <img
+                              src={repair2}
+                              className="figure-img img-fluid rounded"
+                              alt="Site Photo"
+                            />
+                          </a>
+                          <figcaption className="figure-caption">
+                            Site Photograph
+                          </figcaption>
+                        </figure>
+                      </div>
+                      <div className="col-sm-6">
+                        <figure className="figure mb-0">
+                          <a
+                            className="image-popup"
+                            href="#"
+                            title="Engineer Photo with Equipments"
+                          >
+                            <img
+                              src={transformer}
+                              className="figure-img img-fluid rounded"
+                              alt="..."
+                            />
+                          </a>
+                          <figcaption className="figure-caption">
+                            Engineer Photograph
+                          </figcaption>
+                        </figure>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -263,11 +290,10 @@ function ComplaintDetail() {
                           onClick={() => setTab(1)}
                           className={`nav-link ${tab === 1 ? "active" : ""}`}
                         >
-                          {/* Officers */} Remarks (
-                          {complaintData?.staffRemarks.length})
+                          Officers Remarks (5)
                         </button>
                       </li>
-                      {/* <li className="nav-item">
+                      <li className="nav-item">
                         <button
                           onClick={() => setTab(2)}
                           className={`nav-link ${tab === 2 ? "active" : ""}`}
@@ -282,7 +308,7 @@ function ComplaintDetail() {
                         >
                           Time Entries (9 hrs 13 min)
                         </button>
-                      </li> */}
+                      </li>
                     </ul>
                   </div>
                 </div>

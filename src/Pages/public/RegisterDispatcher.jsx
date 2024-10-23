@@ -11,7 +11,7 @@ import { green } from "@mui/material/colors";
 import Loader from "./../../Component/Loader";
 import axios from "axios";
 
-function Login() {
+function RegisterDispatcher() {
   const navigate = useNavigate();
   const [showLoader, setShowLoader] = useState(false);
   const { setCustomMsg, setUser, setUserType } = useUserContext();
@@ -32,7 +32,7 @@ function Login() {
     }
   }, []);
 
-  const login = (e) => {
+  const registerDispatcher = (e) => {
     e.preventDefault();
     if (credential.userType === "") {
       setCustomMsg((prevMsg) => ({
@@ -152,30 +152,29 @@ function Login() {
                   <div className="col-lg-6">
                     <div className="p-lg-5 p-4">
                       <div>
-                        <h5 className="text-primary">Welcome Back !</h5>
-                        <p className="text-muted">
-                          Sign in to continue to UPPCL.
-                        </p>
+                        <h5 className="text-primary">
+                          Dispatcher Registration.
+                        </h5>
+                        {/* <p className="text-muted">
+                          Register to continue to as a Dispatcher.
+                        </p> */}
                       </div>
-                      <form onSubmit={login}>
+                      <form onSubmit={registerDispatcher}>
                         <div className="mt-4">
                           <div className="mb-3">
-                            <label className="form-label">User Type</label>
-                            <select
+                            <label className="form-label">Name</label>
+                            <input
+                              type="text"
                               className="form-control"
-                              name="userType"
+                              value={credential.name}
                               onChange={(e) =>
                                 setCredential((prevCredential) => ({
                                   ...prevCredential,
-                                  userType: e.target.value,
+                                  userName: e.target.value,
                                 }))
                               }
-                            >
-                              <option value="">Select User Type</option>
-                              <option value="division">Division</option>
-                              <option value="circle">Circle</option>
-                              <option value="admin">Admin</option>
-                            </select>
+                              placeholder="Enter Name"
+                            />
                           </div>
                           <div className="mb-3">
                             <label className="form-label">Username</label>
@@ -192,64 +191,51 @@ function Login() {
                               placeholder="Enter username"
                             />
                           </div>
-
                           <div className="mb-3">
-                            <div className="float-end">
-                              <Link to={"/"} className="text-muted">
-                                Forgot password?
-                              </Link>
-                            </div>
-                            <label className="form-label">Password</label>
-                            <div className="position-relative auth-pass-inputgroup mb-3">
-                              <input
-                                type={viewPassword ? "text" : "password"}
-                                className="form-control pe-5"
-                                placeholder="Enter password"
-                                value={credential.password}
-                                onChange={(e) =>
-                                  setCredential((prevCredential) => ({
-                                    ...prevCredential,
-                                    password: e.target.value,
-                                  }))
-                                }
-                              />
-                              <button
-                                className="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted"
-                                type="button"
-                                onClick={() => setViewPassword(!viewPassword)}
-                              >
-                                {viewPassword ? (
-                                  <VisibilityOffIcon />
-                                ) : (
-                                  <VisibilityIcon />
-                                )}
-                              </button>
-                            </div>
+                            <label className="form-label">Email Id</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              value={credential.email}
+                              onChange={(e) =>
+                                setCredential((prevCredential) => ({
+                                  ...prevCredential,
+                                  userName: e.target.value,
+                                }))
+                              }
+                              placeholder="Enter email"
+                            />
                           </div>
-
-                          <div className="d-flex justify-content-between align-items-center">
-                            <div className="form-check">
-                              <input
-                                className="form-check-input"
-                                type="checkbox"
-                                value=""
-                                id="auth-remember-check"
-                              />
-                              <label className="form-check-label">
-                                Remember me
-                              </label>
-                            </div>
-
-                            <div>
-                              <Link
-                                to={"/dispatcher-register"}
-                                className="text-muted"
-                              >
-                                Dispatcher Registration
-                              </Link>
-                            </div>
+                          <div className="mb-3">
+                            <label className="form-label">Mobile</label>
+                            <input
+                              type="number"
+                              className="form-control"
+                              value={credential.mobile}
+                              onChange={(e) =>
+                                setCredential((prevCredential) => ({
+                                  ...prevCredential,
+                                  userName: e.target.value,
+                                }))
+                              }
+                              placeholder="Enter mobile"
+                            />
                           </div>
-
+                          <div className="mb-3">
+                            <label className="form-label">Discom Name</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              value={credential.discomName}
+                              onChange={(e) =>
+                                setCredential((prevCredential) => ({
+                                  ...prevCredential,
+                                  userName: e.target.value,
+                                }))
+                              }
+                              placeholder="Enter Discom Name"
+                            />
+                          </div>
                           <div className="mt-4">
                             <Button
                               type="submit"
@@ -259,7 +245,7 @@ function Login() {
                               }`}
                               disabled={showLoader}
                             >
-                              Sign In
+                              Register
                             </Button>
 
                             {showLoader && (
@@ -273,22 +259,14 @@ function Login() {
                                 }}
                               />
                             )}
+                            <div className="float-end mt-2">
+                              <Link to={"/"} className="text-muted">
+                                Back to Login
+                              </Link>
+                            </div>
                           </div>
                         </div>
                       </form>
-
-                      {/* <div className="mt-5 text-center">
-                    <p className="mb-0">
-                      Having trouble while login ?{" "}
-                      <a
-                        href="#"
-                        className="fw-semibold text-primary text-decoration-underline"
-                      >
-                        {" "}
-                        Click Here
-                      </a>{" "}
-                    </p>
-                  </div> */}
                     </div>
                   </div>
                 </div>
@@ -311,4 +289,4 @@ function Login() {
     </div>
   );
 }
-export default Login;
+export default RegisterDispatcher;

@@ -21,40 +21,48 @@ function Dispatchers() {
   const [showLoader, setShowLoader] = useState(false);
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState("add");
+  const [dispatchers, setDispatchers] = useState(null);
   const [dispatcherData, setDispatcherData] = useState({
     id: "",
     name: "",
     username: "",
     email: "",
+    role: "",
     phone: "",
     discomName: "",
   });
-
+  useEffect(() => {
+    if (token !== "") {
+      fetchDispatcher();
+    }
+  }, [token]);
   const handleClickOpen = () => {
     setOpen(true);
   };
 
   const handleClose = () => {
     setOpen(false);
-    setItemData((prevItem) => ({
+    setDispatcherData((prevItem) => ({
       ...prevItem,
       id: "",
       name: "",
       username: "",
       email: "",
       phone: "",
+      role: "",
       discomName: "",
     }));
   };
 
-  const fetchGang = () => {
+  const fetchDispatcher = () => {
     setShowLoader(true);
     const data = {
       search: "",
-      gangID: "",
+      roleBased: "dispatcher",
+      isAssigned: "",
     };
     axios
-      .post(`${apiUrl}list-equipment`, data, {
+      .post(`${apiUrl}user-list`, data, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -62,6 +70,7 @@ function Dispatchers() {
       })
       .then((response) => {
         console.log("Response:", response);
+        setDispatchers(response.data?.users);
         setShowLoader(false);
       })
       .catch((error) => {
@@ -72,11 +81,11 @@ function Dispatchers() {
 
   const deleteDispatcher = (id) => {
     const data = {
-      equipmentID: id,
+      id: id,
     };
 
     axios
-      .delete(`${apiUrl}delete-gang`, {
+      .delete(`${apiUrl}softdelete-user`, {
         data: data,
         headers: {
           "Content-Type": "application/json",
@@ -91,7 +100,7 @@ function Dispatchers() {
           text: response?.data?.message,
           type: "success",
         }));
-        fetchGang();
+        fetchDispatcher();
       })
       .catch((error) => {
         alert(error.message);
@@ -113,9 +122,16 @@ function Dispatchers() {
   const addDispatcher = (e) => {
     e.preventDefault();
     setShowLoader(true);
-    const data = {};
+    const data = {
+      name: dispatcherData.name,
+      username: dispatcherData.username,
+      email: dispatcherData.email,
+      phone: dispatcherData.phone,
+      role: dispatcherData.role,
+      discomName: dispatcherData.discomName,
+    };
     axios
-      .post(`${apiUrl}add-gang`, data, {
+      .post(`${apiUrl}register`, data, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -130,8 +146,17 @@ function Dispatchers() {
           text: response?.data?.message,
           type: "success",
         }));
+        setDispatcherData({
+          id: "",
+          name: "",
+          username: "",
+          email: "",
+          role: "",
+          phone: "",
+          discomName: "",
+        });
         setOpen(false);
-        fetchGang();
+        fetchDispatcher();
       })
       .catch((error) => {
         setShowLoader(false);
@@ -142,11 +167,17 @@ function Dispatchers() {
   const updateDispatcher = (e) => {
     e.preventDefault();
     setShowLoader(true);
-    const data = {};
-    console.log("-- ", data);
-    //return;
+    const data = {
+      name: dispatcherData.name,
+      username: dispatcherData.username,
+      email: dispatcherData.email,
+      phone: dispatcherData.phone,
+      role: dispatcherData.role,
+      discomName: dispatcherData.discomName,
+      id: dispatcherData.id,
+    };
     axios
-      .put(`${apiUrl}edit-gang`, data, {
+      .put(`${apiUrl}user-update`, data, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -161,54 +192,17 @@ function Dispatchers() {
           text: response?.data?.message,
           type: "success",
         }));
+        setDispatcherData({
+          id: "",
+          name: "",
+          username: "",
+          email: "",
+          role: "",
+          phone: "",
+          discomName: "",
+        });
         setOpen(false);
-        fetchGang();
-      })
-      .catch((error) => {
-        setShowLoader(false);
-        console.log(error);
-      });
-  };
-
-  const getDispatcher = (id) => {
-    setShowLoader(true);
-    const data = {
-      search: "",
-      gangID: id,
-    };
-    axios
-      .post(`${apiUrl}list-gang`, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((response) => {
-        console.log("Response:", response);
-        setMode("edit");
-        const {
-          gangName,
-          gangMobile,
-          gangLeaderName,
-          gangLeaderID,
-          feeder,
-          location,
-          tools_availabe,
-          substation_id,
-        } = response.data.gangs[0];
-        setGangData((prevGangData) => ({
-          ...prevGangData,
-          gangName: gangName,
-          gangMobile: gangMobile,
-          gangLeaderID: gangLeaderID,
-          gangLeaderName: gangLeaderName,
-          feeder: feeder,
-          location: location,
-          tools_availabe: tools_availabe,
-          subStation: substation_id,
-        }));
-        setOpen(true);
-        setShowLoader(false);
+        fetchDispatcher();
       })
       .catch((error) => {
         setShowLoader(false);
@@ -270,6 +264,7 @@ function Dispatchers() {
                           <th>Username</th>
                           <th>Email</th>
                           <th>Phone</th>
+                          <th>Role</th>
                           <th>Discom Name</th>
                           <th style={{ width: 120 }} align="center">
                             Action
@@ -277,110 +272,76 @@ function Dispatchers() {
                         </tr>
                       </thead>
                       <tbody className="list form-check-all">
-                        <tr>
-                          <td>1</td>
-                          <td>DVVNL</td>
-                          <td>DVVNL</td>
-                          <td>DVVNL@gmail.com</td>
-                          <td>6664446565</td>
-                          <td>DVVNL</td>
-                          <td align="center">
-                            <button
-                              className="btn btn-primary btn-sm"
-                              onClick={() => {
-                                setMode("edit");
-                                handleClickOpen();
-                              }}
-                            >
-                              <i className="ri-pencil-line"></i>
-                            </button>
-                            <button
-                              className="btn btn-danger btn-sm ms-1"
-                              onClick={() => {
-                                Swal.fire({
-                                  title: "Do you really want to delete?",
-                                  icon: "question",
-                                  confirmButtonText: "Yes",
-                                  showDenyButton: true,
-                                }).then((result) => {
-                                  if (result.isConfirmed) {
-                                    deleteEquipment(2);
-                                  } else if (result.isDenied) {
-                                    Swal.fire("Delete cancelled", "", "info");
-                                  }
-                                });
-                              }}
-                            >
-                              <i className="ri-delete-bin-line"></i>
-                            </button>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>2</td>
-                          <td>DVVNL</td>
-                          <td>DVVNL</td>
-                          <td>DVVNL@gmail.com</td>
-                          <td>6664446565</td>
-                          <td>DVVNL</td>
-
-                          <td align="center">
-                            <button className="btn btn-primary btn-sm">
-                              <i className="ri-pencil-line"></i>
-                            </button>
-                            <button className="btn btn-danger btn-sm ms-1">
-                              <i className="ri-delete-bin-line"></i>
-                            </button>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>3</td>
-                          <td>DVVNL</td>
-                          <td>DVVNL</td>
-                          <td>DVVNL@gmail.com</td>
-                          <td>6664446565</td>
-                          <td>DVVNL</td>
-
-                          <td align="center">
-                            <button className="btn btn-primary btn-sm">
-                              <i className="ri-pencil-line"></i>
-                            </button>
-                            <button className="btn btn-danger btn-sm ms-1">
-                              <i className="ri-delete-bin-line"></i>
-                            </button>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>4</td>
-                          <td>DVVNL</td>
-                          <td>DVVNL</td>
-                          <td>DVVNL@gmail.com</td>
-                          <td>6664446565</td>
-                          <td>DVVNL</td>
-                          <td align="center">
-                            <button className="btn btn-primary btn-sm">
-                              <i className="ri-pencil-line"></i>
-                            </button>
-                            <button className="btn btn-danger btn-sm ms-1">
-                              <i className="ri-delete-bin-line"></i>
-                            </button>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>5</td>
-                          <td>DVVNL</td>
-                          <td>DVVNL</td>
-                          <td>DVVNL@gmail.com</td>
-                          <td>6664446565</td>
-                          <td>DVVNL</td>
-                          <td align="center">
-                            <button className="btn btn-primary btn-sm">
-                              <i className="ri-pencil-line"></i>
-                            </button>
-                            <button className="btn btn-danger btn-sm ms-1">
-                              <i className="ri-delete-bin-line"></i>
-                            </button>
-                          </td>
-                        </tr>
+                        {dispatchers ? (
+                          dispatchers.length > 0 ? (
+                            dispatchers.map((dispatcher, index) => (
+                              <tr key={dispatcher._id}>
+                                <td>{index + 1}</td>
+                                <td>{dispatcher.name}</td>
+                                <td>{dispatcher.username}</td>
+                                <td>{dispatcher.email}</td>
+                                <td>{dispatcher.phone}</td>
+                                <td>{dispatcher.role}</td>
+                                <td>{dispatcher.discomName}</td>
+                                <td align="center">
+                                  <button
+                                    className="btn btn-primary btn-sm"
+                                    onClick={() => {
+                                      setMode("edit");
+                                      setDispatcherData({
+                                        id: dispatcher._id,
+                                        name: dispatcher.name,
+                                        username: dispatcher?.username,
+                                        email: dispatcher?.email,
+                                        role: dispatcher?.role,
+                                        phone: dispatcher?.phone,
+                                        discomName: dispatcher?.discomName,
+                                      });
+                                      handleClickOpen();
+                                    }}
+                                  >
+                                    <i className="ri-pencil-line"></i>
+                                  </button>
+                                  <button
+                                    className="btn btn-danger btn-sm ms-1"
+                                    onClick={() => {
+                                      Swal.fire({
+                                        title: "Do you really want to delete?",
+                                        icon: "question",
+                                        confirmButtonText: "Yes",
+                                        showDenyButton: true,
+                                      }).then((result) => {
+                                        if (result.isConfirmed) {
+                                          deleteDispatcher(dispatcher._id);
+                                        } else if (result.isDenied) {
+                                          Swal.fire(
+                                            "Delete cancelled",
+                                            "",
+                                            "info"
+                                          );
+                                        }
+                                      });
+                                    }}
+                                  >
+                                    <i className="ri-delete-bin-line"></i>
+                                  </button>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={8} align="center">
+                                No record
+                              </td>
+                            </tr>
+                          )
+                        ) : (
+                          <tr>
+                            <td colSpan={8} align="center">
+                              Loading...
+                            </td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -412,7 +373,7 @@ function Dispatchers() {
                           className="form-control"
                           placeholder="Name"
                           name="name"
-                          value={dispatcherData.name}
+                          value={dispatcherData?.name}
                           onChange={handleChange}
                         />
                       </div>
@@ -424,7 +385,7 @@ function Dispatchers() {
                         className="form-control"
                         placeholder="Username"
                         name="username"
-                        value={dispatcherData.username}
+                        value={dispatcherData?.username}
                         onChange={handleChange}
                       />
                     </div>
@@ -435,7 +396,7 @@ function Dispatchers() {
                         className="form-control"
                         placeholder="Email Id"
                         name="email"
-                        value={dispatcherData.email}
+                        value={dispatcherData?.email}
                         onChange={handleChange}
                       />
                     </div>
@@ -446,7 +407,18 @@ function Dispatchers() {
                         className="form-control"
                         placeholder="Mobile"
                         name="phone"
-                        value={dispatcherData.phone}
+                        value={dispatcherData?.phone}
+                        onChange={handleChange}
+                      />
+                    </div>
+                    <div className="col-lg-6">
+                      <label className="form-label">Role</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Role"
+                        name="role"
+                        value={dispatcherData?.role}
                         onChange={handleChange}
                       />
                     </div>
@@ -457,7 +429,7 @@ function Dispatchers() {
                         className="form-control"
                         placeholder="Discom Name"
                         name="discomName"
-                        value={dispatcherData.discomName}
+                        value={dispatcherData?.discomName}
                         onChange={handleChange}
                       />
                     </div>

@@ -143,6 +143,20 @@ function Sidebar() {
                 <span data-key="t-apps">Dispatcher</span>
               </Link>
             </li>
+
+            <li className="nav-item">
+              <Link
+                to="/feedback-master"
+                className={`${
+                  pathname === "/feedback-master"
+                    ? "nav-link menu-link active"
+                    : "nav-link menu-link "
+                } `}
+              >
+                <i className="ri-feedback-line"></i>
+                <span data-key="t-apps">Feedback Master</span>
+              </Link>
+            </li>
           </ul>
         </div>
       </div>

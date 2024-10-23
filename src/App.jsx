@@ -15,6 +15,7 @@ import GangCategoryList from "./Pages/Private/GangCategoryList";
 import ConsumableItem from "./Pages/Private/ConsumableItems";
 import Dispatchers from "./Pages/Private/DispatcherList";
 import RegisterDispatcher from "./Pages/public/RegisterDispatcher";
+import FeedbackMaster from "./Pages/Private/FeedbackMaster";
 
 function App() {
   const { pathname } = useLocation();
@@ -129,6 +130,15 @@ function App() {
             <>
               <PageTitle title="Dispatcher Registration | Complaint Management System UPPCL" />
               <RegisterDispatcher />
+            </>
+          }
+        />
+        <Route
+          path="/feedback-master"
+          element={
+            <>
+              <PageTitle title="Feedback Master | Complaint Management System UPPCL" />
+              <FeedbackMaster />
             </>
           }
         />

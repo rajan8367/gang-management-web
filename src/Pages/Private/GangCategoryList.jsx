@@ -19,6 +19,7 @@ const Transition = forwardRef(function Transition(props, ref) {
 function GangCategoryList() {
   const { token, user, setCustomMsg } = useUserContext();
   const [showLoader, setShowLoader] = useState(false);
+  const [categoryList, setCategoryList] = useState(null);
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState("add");
   const [categoryData, setCategoryData] = useState({
@@ -26,6 +27,11 @@ function GangCategoryList() {
     name: "",
   });
 
+  useEffect(() => {
+    if (token !== "") {
+      fetchGangCategory();
+    }
+  }, [token]);
   const handleClickOpen = () => {
     setOpen(true);
   };
@@ -38,14 +44,11 @@ function GangCategoryList() {
       name: "",
     }));
   };
-  const fetchGang = () => {
+  const fetchGangCategory = () => {
     setShowLoader(true);
-    const data = {
-      search: "",
-      gangID: "",
-    };
+    const data = {};
     axios
-      .post(`${apiUrl}list-equipment`, data, {
+      .post(`${apiUrl}list-gangCategory`, data, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -53,6 +56,7 @@ function GangCategoryList() {
       })
       .then((response) => {
         console.log("Response:", response);
+        setCategoryList(response.data?.data);
         setShowLoader(false);
       })
       .catch((error) => {
@@ -61,13 +65,13 @@ function GangCategoryList() {
       });
   };
 
-  const deleteEquipment = (id) => {
+  const deleteCategory = (id) => {
     const data = {
-      equipmentID: id,
+      id: id,
     };
 
     axios
-      .delete(`${apiUrl}delete-gang`, {
+      .delete(`${apiUrl}delete-gangCategory`, {
         data: data,
         headers: {
           "Content-Type": "application/json",
@@ -82,7 +86,7 @@ function GangCategoryList() {
           text: response?.data?.message,
           type: "success",
         }));
-        fetchGang();
+        fetchGangCategory();
       })
       .catch((error) => {
         alert(error.message);
@@ -103,9 +107,11 @@ function GangCategoryList() {
   const addCategory = (e) => {
     e.preventDefault();
     setShowLoader(true);
-    const data = {};
+    const data = {
+      categoryName: categoryData.name,
+    };
     axios
-      .post(`${apiUrl}add-gang`, data, {
+      .post(`${apiUrl}add-gangCategory`, data, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -114,6 +120,10 @@ function GangCategoryList() {
       .then((response) => {
         console.log("Response:", response);
         setShowLoader(false);
+        setCategoryData({
+          id: "",
+          name: "",
+        });
         setCustomMsg((prevMsg) => ({
           ...prevMsg,
           isVisible: true,
@@ -121,7 +131,7 @@ function GangCategoryList() {
           type: "success",
         }));
         setOpen(false);
-        fetchGang();
+        fetchGangCategory();
       })
       .catch((error) => {
         setShowLoader(false);
@@ -132,11 +142,13 @@ function GangCategoryList() {
   const updateCategory = (e) => {
     e.preventDefault();
     setShowLoader(true);
-    const data = {};
-    console.log("-- ", data);
-    //return;
+    const data = {
+      categoryName: categoryData.name,
+      id: categoryData.id,
+    };
+
     axios
-      .put(`${apiUrl}edit-gang`, data, {
+      .put(`${apiUrl}update-gangCategory`, data, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -151,53 +163,12 @@ function GangCategoryList() {
           text: response?.data?.message,
           type: "success",
         }));
+        setCategoryData({
+          id: "",
+          name: "",
+        });
         setOpen(false);
-        fetchGang();
-      })
-      .catch((error) => {
-        setShowLoader(false);
-        console.log(error);
-      });
-  };
-  const getEquipmentData = (id) => {
-    setShowLoader(true);
-    const data = {
-      search: "",
-      gangID: id,
-    };
-    axios
-      .post(`${apiUrl}list-gang`, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((response) => {
-        console.log("Response:", response);
-        setMode("edit");
-        const {
-          gangName,
-          gangMobile,
-          gangLeaderName,
-          gangLeaderID,
-          feeder,
-          location,
-          tools_availabe,
-          substation_id,
-        } = response.data.gangs[0];
-        setGangData((prevGangData) => ({
-          ...prevGangData,
-          gangName: gangName,
-          gangMobile: gangMobile,
-          gangLeaderID: gangLeaderID,
-          gangLeaderName: gangLeaderName,
-          feeder: feeder,
-          location: location,
-          tools_availabe: tools_availabe,
-          subStation: substation_id,
-        }));
-        setOpen(true);
-        setShowLoader(false);
+        fetchGangCategory();
       })
       .catch((error) => {
         setShowLoader(false);
@@ -225,7 +196,6 @@ function GangCategoryList() {
               </div>
             </div>
           </div>
-
           <div className="row">
             <div className="col-lg-12">
               <div className="card" id="ticketsList">
@@ -264,89 +234,66 @@ function GangCategoryList() {
                         </tr>
                       </thead>
                       <tbody className="list form-check-all">
-                        <tr>
-                          <td>1</td>
-                          <td>Category-1</td>
-                          <td align="center">
-                            <button
-                              className="btn btn-primary btn-sm"
-                              onClick={() => {
-                                setMode("edit");
-                                handleClickOpen();
-                              }}
-                            >
-                              <i className="ri-pencil-line"></i>
-                            </button>
-                            <button
-                              className="btn btn-danger btn-sm ms-1"
-                              onClick={() => {
-                                Swal.fire({
-                                  title: "Do you really want to delete?",
-                                  icon: "question",
-                                  confirmButtonText: "Yes",
-                                  showDenyButton: true,
-                                }).then((result) => {
-                                  if (result.isConfirmed) {
-                                    deleteEquipment(2);
-                                  } else if (result.isDenied) {
-                                    Swal.fire("Delete cancelled", "", "info");
-                                  }
-                                });
-                              }}
-                            >
-                              <i className="ri-delete-bin-line"></i>
-                            </button>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>2</td>
-
-                          <td>Category-2</td>
-                          <td align="center">
-                            <button className="btn btn-primary btn-sm">
-                              <i className="ri-pencil-line"></i>
-                            </button>
-                            <button className="btn btn-danger btn-sm ms-1">
-                              <i className="ri-delete-bin-line"></i>
-                            </button>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>3</td>
-                          <td>Category-3</td>
-                          <td align="center">
-                            <button className="btn btn-primary btn-sm">
-                              <i className="ri-pencil-line"></i>
-                            </button>
-                            <button className="btn btn-danger btn-sm ms-1">
-                              <i className="ri-delete-bin-line"></i>
-                            </button>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>4</td>
-                          <td>Category-4</td>
-                          <td align="center">
-                            <button className="btn btn-primary btn-sm">
-                              <i className="ri-pencil-line"></i>
-                            </button>
-                            <button className="btn btn-danger btn-sm ms-1">
-                              <i className="ri-delete-bin-line"></i>
-                            </button>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>5</td>
-                          <td>Category-5</td>
-                          <td align="center">
-                            <button className="btn btn-primary btn-sm">
-                              <i className="ri-pencil-line"></i>
-                            </button>
-                            <button className="btn btn-danger btn-sm ms-1">
-                              <i className="ri-delete-bin-line"></i>
-                            </button>
-                          </td>
-                        </tr>
+                        {categoryList ? (
+                          categoryList.length > 0 ? (
+                            categoryList.map((category, index) => (
+                              <tr key={category._id}>
+                                <td>{index + 1}</td>
+                                <td>{category.categoryName}</td>
+                                <td align="center">
+                                  <button
+                                    className="btn btn-primary btn-sm"
+                                    onClick={() => {
+                                      setMode("edit");
+                                      setCategoryData({
+                                        id: category._id,
+                                        name: category.categoryName,
+                                      });
+                                      handleClickOpen();
+                                    }}
+                                  >
+                                    <i className="ri-pencil-line"></i>
+                                  </button>
+                                  <button
+                                    className="btn btn-danger btn-sm ms-1"
+                                    onClick={() => {
+                                      Swal.fire({
+                                        title: "Do you really want to delete?",
+                                        icon: "question",
+                                        confirmButtonText: "Yes",
+                                        showDenyButton: true,
+                                      }).then((result) => {
+                                        if (result.isConfirmed) {
+                                          deleteCategory(category._id);
+                                        } else if (result.isDenied) {
+                                          Swal.fire(
+                                            "Delete cancelled",
+                                            "",
+                                            "info"
+                                          );
+                                        }
+                                      });
+                                    }}
+                                  >
+                                    <i className="ri-delete-bin-line"></i>
+                                  </button>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={3} align="center">
+                                No record
+                              </td>
+                            </tr>
+                          )
+                        ) : (
+                          <tr>
+                            <td colSpan={3} align="center">
+                              Loading...
+                            </td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -359,7 +306,8 @@ function GangCategoryList() {
             TransitionComponent={Transition}
             keepMounted
             onClose={handleClose}
-            aria-describedby="alert-dialog-slide-description"
+            maxWidth="sm"
+            fullWidth
           >
             <DialogTitle>
               {mode === "add" ? "Add" : "Update"} Category

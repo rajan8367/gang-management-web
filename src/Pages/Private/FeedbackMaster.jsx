@@ -99,6 +99,15 @@ function FeedbackMaster() {
 
   const addFeedback = (e) => {
     e.preventDefault();
+    if (feedbackData.feedbackName === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Enter Feedback Title",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
     setShowLoader(true);
     const data = {
       feedbackName: feedbackData.feedbackName,
@@ -133,6 +142,15 @@ function FeedbackMaster() {
 
   const updateFeedback = (e) => {
     e.preventDefault();
+    if (feedbackData.feedbackName === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Enter Feedback Title",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
     setShowLoader(true);
     const data = {
       feedbackName: feedbackData.feedbackName,
@@ -231,7 +249,7 @@ function FeedbackMaster() {
                           <th scope="col" style={{ width: "40px" }}>
                             S.No.
                           </th>
-                          <th>Name</th>
+                          <th>Title</th>
                           <th style={{ width: 120 }} align="center">
                             Action
                           </th>

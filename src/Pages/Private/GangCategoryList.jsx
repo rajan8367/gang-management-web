@@ -106,6 +106,15 @@ function GangCategoryList() {
   };
   const addCategory = (e) => {
     e.preventDefault();
+    if (categoryData.name === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Enter category name",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
     setShowLoader(true);
     const data = {
       categoryName: categoryData.name,
@@ -141,6 +150,15 @@ function GangCategoryList() {
 
   const updateCategory = (e) => {
     e.preventDefault();
+    if (categoryData.name === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Enter category name",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
     setShowLoader(true);
     const data = {
       categoryName: categoryData.name,

@@ -27,7 +27,7 @@ function Dispatchers() {
     name: "",
     username: "",
     email: "",
-    role: "",
+    role: "dispatcher",
     phone: "",
     discomName: "",
   });
@@ -49,7 +49,7 @@ function Dispatchers() {
       username: "",
       email: "",
       phone: "",
-      role: "",
+      role: "dispatcher",
       discomName: "",
     }));
   };
@@ -121,6 +121,51 @@ function Dispatchers() {
 
   const addDispatcher = (e) => {
     e.preventDefault();
+    if (dispatcherData.name === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Enter Name",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
+    if (dispatcherData.username === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Enter Username",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
+    if (dispatcherData.email === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Enter Email Id",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
+    if (dispatcherData.phone === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Enter Mobile Number",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
+    if (dispatcherData.discomName === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Enter Discom Name",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
     setShowLoader(true);
     const data = {
       name: dispatcherData.name,
@@ -151,7 +196,7 @@ function Dispatchers() {
           name: "",
           username: "",
           email: "",
-          role: "",
+          role: "dispatcher",
           phone: "",
           discomName: "",
         });
@@ -166,6 +211,51 @@ function Dispatchers() {
 
   const updateDispatcher = (e) => {
     e.preventDefault();
+    if (dispatcherData.name === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Enter Name",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
+    if (dispatcherData.username === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Enter Username",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
+    if (dispatcherData.email === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Enter Email Id",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
+    if (dispatcherData.phone === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Enter Mobile Number",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
+    if (dispatcherData.discomName === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Enter Discom Name",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
     setShowLoader(true);
     const data = {
       name: dispatcherData.name,
@@ -197,7 +287,7 @@ function Dispatchers() {
           name: "",
           username: "",
           email: "",
-          role: "",
+          role: "dispatcher",
           phone: "",
           discomName: "",
         });
@@ -403,7 +493,7 @@ function Dispatchers() {
                     <div className="col-lg-6">
                       <label className="form-label">Mobile</label>
                       <input
-                        type="text"
+                        type="number"
                         className="form-control"
                         placeholder="Mobile"
                         name="phone"
@@ -411,7 +501,7 @@ function Dispatchers() {
                         onChange={handleChange}
                       />
                     </div>
-                    <div className="col-lg-6">
+                    {/* <div className="col-lg-6">
                       <label className="form-label">Role</label>
                       <input
                         type="text"
@@ -421,7 +511,7 @@ function Dispatchers() {
                         value={dispatcherData?.role}
                         onChange={handleChange}
                       />
-                    </div>
+                    </div> */}
                     <div className="col-lg-6">
                       <label className="form-label">Discom Name</label>
                       <input

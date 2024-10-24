@@ -8,72 +8,69 @@ import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import Slide from "@mui/material/Slide";
-import CloseIcon from "@mui/icons-material/Close";
 import { Fab } from "@mui/material";
 import Swal from "sweetalert2";
 import { Link } from "react-router-dom";
+
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-function ConsumableItem() {
+function EscaltionMaster() {
   const { token, user, setCustomMsg } = useUserContext();
   const [showLoader, setShowLoader] = useState(false);
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState("add");
-  const [itemList, setItemList] = useState(null);
-  const [itemData, setItemData] = useState({
+  const [escalationList, setEscalationList] = useState(null);
+  const [roleList, setRoleList] = useState(null);
+  const [escalationData, setEscalationData] = useState({
+    roleName: "",
+    esclateTime: "",
     id: "",
-    name: "",
-    description: "",
   });
-  useEffect(() => {
-    if (token !== "") {
-      fetchItems();
-    }
-  }, [token]);
+
   const handleClickOpen = () => {
     setOpen(true);
   };
 
   const handleClose = () => {
     setOpen(false);
-    setItemData((prevItem) => ({
-      ...prevItem,
+    setEscalationData({
+      roleName: "",
+      esclateTime: "",
       id: "",
-      name: "",
-      description: "",
-    }));
+    });
   };
 
-  const fetchItems = () => {
+  const fetchEscalation = () => {
     setShowLoader(true);
-    const data = {};
     axios
-      .post(`${apiUrl}list-inventory`, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      .post(
+        `${apiUrl}/list-esclation`,
+        {},
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
       .then((response) => {
-        console.log("Response:", response);
-        setItemList(response.data?.data);
+        setEscalationList(response.data?.data || []);
         setShowLoader(false);
       })
       .catch((error) => {
         setShowLoader(false);
-        console.log(error);
+        console.error("Error fetching Escalation:", error);
       });
   };
 
-  const deleteItems = (id) => {
+  const deleteEscalation = (id) => {
     const data = {
       id: id,
     };
-
     axios
-      .delete(`${apiUrl}delete-inventory`, {
+      .delete(`${apiUrl}/delete-esclation`, {
         data: data,
         headers: {
           "Content-Type": "application/json",
@@ -81,47 +78,43 @@ function ConsumableItem() {
         },
       })
       .then((response) => {
-        console.log("Response:", response);
         setCustomMsg((prevMsg) => ({
           ...prevMsg,
           isVisible: true,
-          text: response?.data?.message,
+          text: "Escalation deleted successfully.",
           type: "success",
         }));
-        fetchItems();
+        fetchEscalation();
       })
       .catch((error) => {
+        console.error("Error deleting Escalation:", error);
         alert(error.message);
-        console.error(
-          "Error:",
-          error.response ? error.response.data : error.message
-        );
       });
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setItemData((prevItem) => ({
-      ...prevItem,
+    setEscalationData((prevData) => ({
+      ...prevData,
       [name]: value,
     }));
   };
 
-  const addItem = (e) => {
+  const addEscalate = (e) => {
     e.preventDefault();
-    if (itemData.name === "") {
+    if (escalationData.esclateTime === "") {
       Swal.fire({
         title: "Error!",
-        text: "Enter Item Name",
+        text: "Enter Escalation Time",
         icon: "error",
         confirmButtonText: "Ok",
       });
       return;
     }
-    if (itemData.description === "") {
+    if (escalationData.roleName === "") {
       Swal.fire({
         title: "Error!",
-        text: "Enter Item Description",
+        text: "Select Role",
         icon: "error",
         confirmButtonText: "Ok",
       });
@@ -129,54 +122,53 @@ function ConsumableItem() {
     }
     setShowLoader(true);
     const data = {
-      productName: itemData.name,
-      productDescription: itemData.description,
+      roleName: escalationData.roleName,
+      esclateTime: escalationData.esclateTime,
     };
     axios
-      .post(`${apiUrl}add-inventory`, data, {
+      .post(`${apiUrl}/add-esclation`, data, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       })
       .then((response) => {
-        console.log("Response:", response);
         setShowLoader(false);
         setCustomMsg((prevMsg) => ({
           ...prevMsg,
           isVisible: true,
-          text: response?.data?.message,
+          text: "Escalation added successfully.",
           type: "success",
         }));
-        setItemData({
+        setEscalationData({
+          roleName: "",
+          esclateTime: "",
           id: "",
-          name: "",
-          description: "",
         });
         setOpen(false);
-        fetchItems();
+        fetchEscalation();
       })
       .catch((error) => {
         setShowLoader(false);
-        console.log(error);
+        console.error("Error adding Escalation:", error);
       });
   };
 
-  const updateItem = (e) => {
+  const updateEscalate = (e) => {
     e.preventDefault();
-    if (itemData.name === "") {
+    if (escalationData.esclateTime === "") {
       Swal.fire({
         title: "Error!",
-        text: "Enter Item Name",
+        text: "Enter Escalation Time",
         icon: "error",
         confirmButtonText: "Ok",
       });
       return;
     }
-    if (itemData.description === "") {
+    if (escalationData.roleName === "") {
       Swal.fire({
         title: "Error!",
-        text: "Enter Item Description",
+        text: "Select Role",
         icon: "error",
         confirmButtonText: "Ok",
       });
@@ -184,39 +176,78 @@ function ConsumableItem() {
     }
     setShowLoader(true);
     const data = {
-      id: itemData.id,
-      productName: itemData.name,
-      productDescription: itemData.description,
+      id: escalationData.id,
+      roleName: escalationData.roleName,
+      esclateTime: escalationData.esclateTime,
     };
     axios
-      .put(`${apiUrl}edit-inventory`, data, {
+      .put(`${apiUrl}/edit-esclation`, data, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       })
       .then((response) => {
-        console.log("Response:", response);
         setShowLoader(false);
         setCustomMsg((prevMsg) => ({
           ...prevMsg,
           isVisible: true,
-          text: response?.data?.message,
+          text: "Escalation updated successfully.",
           type: "success",
         }));
-        setOpen(false);
-        setItemData({
+
+        setEscalationData({
+          roleName: "",
+          esclateTime: "",
           id: "",
-          name: "",
-          description: "",
         });
-        fetchItems();
+        setOpen(false);
+        fetchEscalation();
       })
       .catch((error) => {
         setShowLoader(false);
-        console.log(error);
+        console.error("Error updating Escalation:", error);
       });
   };
+
+  const editEscalation = (esc) => {
+    setMode("edit");
+    setEscalationData({
+      roleName: esc.roleName,
+      esclateTime: esc.esclateTime,
+      id: esc._id,
+    });
+    setOpen(true);
+  };
+
+  const fetchRole = () => {
+    setShowLoader(true);
+    axios
+      .post(
+        `${apiUrl}/list-roles`,
+        {},
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+      .then((response) => {
+        setRoleList(response.data?.data || []);
+        setShowLoader(false);
+      })
+      .catch((error) => {
+        setShowLoader(false);
+        console.error("Error fetching Escalation:", error);
+      });
+  };
+  useEffect(() => {
+    if (token !== "") {
+      fetchEscalation();
+      fetchRole();
+    }
+  }, [token]);
 
   return (
     <Layout>
@@ -226,13 +257,15 @@ function ConsumableItem() {
           <div className="row">
             <div className="col-12">
               <div className="page-title-box d-sm-flex align-items-center justify-content-between">
-                <h4 className="mb-sm-0">Consumable Items</h4>
+                <h4 className="mb-sm-0">Escalation Master</h4>
                 <div className="page-title-right">
                   <ol className="breadcrumb m-0">
                     <li className="breadcrumb-item">
                       <Link to={"/dashboard"}>Dashboard</Link>
                     </li>
-                    <li className="breadcrumb-item active">Consumable Items</li>
+                    <li className="breadcrumb-item active">
+                      Escalation Master
+                    </li>
                   </ol>
                 </div>
               </div>
@@ -241,11 +274,11 @@ function ConsumableItem() {
 
           <div className="row">
             <div className="col-lg-12">
-              <div className="card" id="ticketsList">
+              <div className="card">
                 <div className="card-header border-0">
                   <div className="d-flex align-items-center">
                     <h5 className="card-title mb-0 flex-grow-1">
-                      Consumable Items
+                      Escalation Matrix
                     </h5>
                     <div className="flex-shrink-0">
                       <button
@@ -256,7 +289,7 @@ function ConsumableItem() {
                         }}
                       >
                         <i className="ri-add-line align-bottom me-1"></i> Add
-                        Item
+                        Escalation
                       </button>
                     </div>
                   </div>
@@ -270,73 +303,57 @@ function ConsumableItem() {
                           <th scope="col" style={{ width: "40px" }}>
                             S.No.
                           </th>
-                          <th>Name</th>
-                          <th>Description</th>
+                          <th>Role</th>
+                          <th>Escalate Time(Hrs.)</th>
                           <th style={{ width: 120 }} align="center">
                             Action
                           </th>
                         </tr>
                       </thead>
                       <tbody className="list form-check-all">
-                        {itemList ? (
-                          itemList.length > 0 ? (
-                            itemList.map((item, index) => (
-                              <tr key={item._id}>
-                                <td>{index + 1}</td>
-                                <td>{item.productName}</td>
-                                <td>{item.productDescription}</td>
-                                <td align="center">
-                                  <button
-                                    className="btn btn-primary btn-sm"
-                                    onClick={() => {
-                                      setMode("edit");
-                                      setItemData({
-                                        id: item._id,
-                                        name: item.productName,
-                                        description: item.productDescription,
-                                      });
-                                      handleClickOpen();
-                                    }}
-                                  >
-                                    <i className="ri-pencil-line"></i>
-                                  </button>
-                                  <button
-                                    className="btn btn-danger btn-sm ms-1"
-                                    onClick={() => {
-                                      Swal.fire({
-                                        title: "Do you really want to delete?",
-                                        icon: "question",
-                                        confirmButtonText: "Yes",
-                                        showDenyButton: true,
-                                      }).then((result) => {
-                                        if (result.isConfirmed) {
-                                          deleteItems(item._id);
-                                        } else if (result.isDenied) {
-                                          Swal.fire(
-                                            "Delete cancelled",
-                                            "",
-                                            "info"
-                                          );
-                                        }
-                                      });
-                                    }}
-                                  >
-                                    <i className="ri-delete-bin-line"></i>
-                                  </button>
-                                </td>
-                              </tr>
-                            ))
-                          ) : (
-                            <tr>
-                              <td colSpan={4} align="center">
-                                No record
+                        {escalationList ? (
+                          escalationList.map((role, index) => (
+                            <tr key={role._id}>
+                              <td>{index + 1}</td>
+                              <td>{role.roleName}</td>
+                              <td>{role.esclateTime}</td>
+                              <td align="center">
+                                <button
+                                  className="btn btn-primary btn-sm"
+                                  onClick={() => editEscalation(role)}
+                                >
+                                  <i className="ri-pencil-line"></i>
+                                </button>
+                                <button
+                                  className="btn btn-danger btn-sm ms-1"
+                                  onClick={() => {
+                                    Swal.fire({
+                                      title: "Do you really want to delete?",
+                                      icon: "question",
+                                      confirmButtonText: "Yes",
+                                      showDenyButton: true,
+                                    }).then((result) => {
+                                      if (result.isConfirmed) {
+                                        deleteEscalation(role._id);
+                                      } else if (result.isDenied) {
+                                        Swal.fire(
+                                          "Delete cancelled",
+                                          "",
+                                          "info"
+                                        );
+                                      }
+                                    });
+                                  }}
+                                >
+                                  <i className="ri-delete-bin-line"></i>
+                                </button>
                               </td>
                             </tr>
-                          )
+                          ))
                         ) : (
                           <tr>
-                            <td colSpan={4} align="center">
-                              Loading...
+                            <td colSpan={3} align="center">
+                              No record
                             </td>
                           </tr>
                         )}
@@ -347,43 +364,59 @@ function ConsumableItem() {
               </div>
             </div>
           </div>
+
           <Dialog
             open={open}
             TransitionComponent={Transition}
             keepMounted
             onClose={handleClose}
             aria-describedby="alert-dialog-slide-description"
+            PaperProps={{
+              style: { width: "600px", maxHeight: "80vh" },
+            }}
+            maxWidth="md"
+            fullWidth
           >
-            <DialogTitle>{mode === "add" ? "Add" : "Update"} Item</DialogTitle>
+            <DialogTitle>
+              {mode === "add" ? "Add" : "Update"} Escalation
+            </DialogTitle>
             <DialogContent>
-              <form onSubmit={mode === "add" ? addItem : updateItem}>
+              <form onSubmit={mode === "add" ? addEscalate : updateEscalate}>
                 <div className="modal-body">
                   <div className="row g-3">
                     <div className="col-lg-12">
-                      <div id="modal-id">
-                        <label className="form-label">Name</label>
+                      <div>
+                        <label className="form-label">
+                          Escalation Time (Hrs.)
+                        </label>
                         <input
-                          type="text"
+                          type="number"
                           className="form-control"
-                          placeholder="Name"
-                          name="name"
-                          value={itemData.name}
+                          placeholder="Escalation Time (Hrs.)"
+                          name="esclateTime"
+                          value={escalationData.esclateTime}
                           onChange={handleChange}
+                          required
                         />
                       </div>
                     </div>
-
                     <div className="col-lg-12">
                       <div>
-                        <label className="form-label">Description</label>
-                        <textarea
-                          type="text"
+                        <label className="form-label">Role</label>
+                        <select
                           className="form-control"
-                          placeholder="Description"
-                          name="description"
-                          value={itemData.description}
+                          value={escalationData.roleName}
                           onChange={handleChange}
-                        ></textarea>
+                          name="roleName"
+                        >
+                          <option>Select Role</option>
+                          {roleList &&
+                            roleList.map((role) => (
+                              <option key={role._id} value={role.roleName}>
+                                {role.roleName}
+                              </option>
+                            ))}
+                        </select>
                       </div>
                     </div>
                   </div>
@@ -393,7 +426,7 @@ function ConsumableItem() {
                     <button
                       type="button"
                       className="btn btn-light"
-                      onClick={() => handleClose()}
+                      onClick={handleClose}
                     >
                       Close
                     </button>
@@ -402,7 +435,7 @@ function ConsumableItem() {
                       disabled={showLoader}
                       className="btn btn-success"
                     >
-                      {mode === "add" ? "Add" : "Update"} Item
+                      {mode === "add" ? "Add" : "Update"} Escalation
                     </button>
                   </div>
                 </div>
@@ -414,4 +447,5 @@ function ConsumableItem() {
     </Layout>
   );
 }
-export default ConsumableItem;
+
+export default EscaltionMaster;

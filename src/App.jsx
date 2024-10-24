@@ -16,6 +16,8 @@ import ConsumableItem from "./Pages/Private/ConsumableItems";
 import Dispatchers from "./Pages/Private/DispatcherList";
 import RegisterDispatcher from "./Pages/public/RegisterDispatcher";
 import FeedbackMaster from "./Pages/Private/FeedbackMaster";
+import RoleMaster from "./Pages/Private/RoleMaster";
+import EscaltionMaster from "./Pages/Private/EscalationMatrix";
 
 function App() {
   const { pathname } = useLocation();
@@ -139,6 +141,24 @@ function App() {
             <>
               <PageTitle title="Feedback Master | Complaint Management System UPPCL" />
               <FeedbackMaster />
+            </>
+          }
+        />
+        <Route
+          path="/role-master"
+          element={
+            <>
+              <PageTitle title="Role Master | Complaint Management System UPPCL" />
+              <RoleMaster />
+            </>
+          }
+        />
+        <Route
+          path="/escalation-matrix"
+          element={
+            <>
+              <PageTitle title="Escalation Matrix | Complaint Management System UPPCL" />
+              <EscaltionMaster />
             </>
           }
         />

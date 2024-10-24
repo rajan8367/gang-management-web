@@ -157,6 +157,32 @@ function Sidebar() {
                 <span data-key="t-apps">Feedback Master</span>
               </Link>
             </li>
+            <li className="nav-item">
+              <Link
+                to="/role-master"
+                className={`${
+                  pathname === "/role-master"
+                    ? "nav-link menu-link active"
+                    : "nav-link menu-link "
+                } `}
+              >
+                <i className="ri-profile-line"></i>
+                <span data-key="t-apps">Role Master</span>
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link
+                to="/escalation-matrix"
+                className={`${
+                  pathname === "/escalation-matrix"
+                    ? "nav-link menu-link active"
+                    : "nav-link menu-link "
+                } `}
+              >
+                <i className="ri-timer-line"></i>
+                <span data-key="t-apps">Escalation Matrix</span>
+              </Link>
+            </li>
           </ul>
         </div>
       </div>

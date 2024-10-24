@@ -114,6 +114,24 @@ function SafetyEquipmentList() {
   };
   const addEquipment = (e) => {
     e.preventDefault();
+    if (equipmentData.equipmentName === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Enter Checklist Name",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
+    if (equipmentData.equipmentDescription === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Enter Checklist Description",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
     setShowLoader(true);
     const data = {
       equipmentName: equipmentData.equipmentName,
@@ -151,6 +169,24 @@ function SafetyEquipmentList() {
 
   const updateEquipment = (e) => {
     e.preventDefault();
+    if (equipmentData.equipmentName === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Enter Checklist Name",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
+    if (equipmentData.equipmentDescription === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Enter Checklist Description",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
     setShowLoader(true);
     const data = {
       equipmentName: equipmentData.equipmentName,
@@ -322,7 +358,6 @@ function SafetyEquipmentList() {
             TransitionComponent={Transition}
             keepMounted
             onClose={handleClose}
-            aria-describedby="alert-dialog-slide-description"
           >
             <DialogTitle>
               {mode === "add" ? "Add" : "Update"} Checklist
@@ -355,7 +390,6 @@ function SafetyEquipmentList() {
                           name="equipmentDescription"
                           value={equipmentData.equipmentDescription}
                           onChange={handleChange}
-                          required
                         ></textarea>
                       </div>
                     </div>

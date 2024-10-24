@@ -8,72 +8,66 @@ import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import Slide from "@mui/material/Slide";
-import CloseIcon from "@mui/icons-material/Close";
 import { Fab } from "@mui/material";
 import Swal from "sweetalert2";
 import { Link } from "react-router-dom";
+
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-function ConsumableItem() {
+function RoleMaster() {
   const { token, user, setCustomMsg } = useUserContext();
   const [showLoader, setShowLoader] = useState(false);
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState("add");
-  const [itemList, setItemList] = useState(null);
-  const [itemData, setItemData] = useState({
+  const [roleList, setRoleList] = useState(null);
+  const [roleData, setRoleData] = useState({
     id: "",
-    name: "",
-    description: "",
+    roleName: "",
   });
-  useEffect(() => {
-    if (token !== "") {
-      fetchItems();
-    }
-  }, [token]);
+
   const handleClickOpen = () => {
     setOpen(true);
   };
 
   const handleClose = () => {
     setOpen(false);
-    setItemData((prevItem) => ({
-      ...prevItem,
+    setRoleData({
       id: "",
-      name: "",
-      description: "",
-    }));
+      roleName: "",
+    });
   };
 
-  const fetchItems = () => {
+  const fetchRole = () => {
     setShowLoader(true);
-    const data = {};
     axios
-      .post(`${apiUrl}list-inventory`, data, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      .post(
+        `${apiUrl}/list-roles`,
+        {},
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
       .then((response) => {
-        console.log("Response:", response);
-        setItemList(response.data?.data);
+        setRoleList(response.data?.data || []);
         setShowLoader(false);
       })
       .catch((error) => {
         setShowLoader(false);
-        console.log(error);
+        console.error("Error fetching Role:", error);
       });
   };
 
-  const deleteItems = (id) => {
+  const deleteFeedback = (id) => {
     const data = {
       id: id,
     };
-
     axios
-      .delete(`${apiUrl}delete-inventory`, {
+      .delete(`${apiUrl}/delete-roles`, {
         data: data,
         headers: {
           "Content-Type": "application/json",
@@ -81,47 +75,34 @@ function ConsumableItem() {
         },
       })
       .then((response) => {
-        console.log("Response:", response);
         setCustomMsg((prevMsg) => ({
           ...prevMsg,
           isVisible: true,
-          text: response?.data?.message,
+          text: "Role deleted successfully.",
           type: "success",
         }));
-        fetchItems();
+        fetchRole();
       })
       .catch((error) => {
+        console.error("Error deleting Role:", error);
         alert(error.message);
-        console.error(
-          "Error:",
-          error.response ? error.response.data : error.message
-        );
       });
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setItemData((prevItem) => ({
-      ...prevItem,
+    setRoleData((prevData) => ({
+      ...prevData,
       [name]: value,
     }));
   };
 
-  const addItem = (e) => {
+  const addRole = (e) => {
     e.preventDefault();
-    if (itemData.name === "") {
+    if (roleData.roleName === "") {
       Swal.fire({
         title: "Error!",
-        text: "Enter Item Name",
-        icon: "error",
-        confirmButtonText: "Ok",
-      });
-      return;
-    }
-    if (itemData.description === "") {
-      Swal.fire({
-        title: "Error!",
-        text: "Enter Item Description",
+        text: "Enter Role",
         icon: "error",
         confirmButtonText: "Ok",
       });
@@ -129,54 +110,42 @@ function ConsumableItem() {
     }
     setShowLoader(true);
     const data = {
-      productName: itemData.name,
-      productDescription: itemData.description,
+      roleName: roleData.roleName,
     };
     axios
-      .post(`${apiUrl}add-inventory`, data, {
+      .post(`${apiUrl}/add-roles`, data, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       })
       .then((response) => {
-        console.log("Response:", response);
         setShowLoader(false);
         setCustomMsg((prevMsg) => ({
           ...prevMsg,
           isVisible: true,
-          text: response?.data?.message,
+          text: "Role added successfully.",
           type: "success",
         }));
-        setItemData({
+        setRoleData({
           id: "",
-          name: "",
-          description: "",
+          roleName: "",
         });
         setOpen(false);
-        fetchItems();
+        fetchRole();
       })
       .catch((error) => {
         setShowLoader(false);
-        console.log(error);
+        console.error("Error adding Role:", error);
       });
   };
 
-  const updateItem = (e) => {
+  const updateRole = (e) => {
     e.preventDefault();
-    if (itemData.name === "") {
+    if (roleData.roleName === "") {
       Swal.fire({
         title: "Error!",
-        text: "Enter Item Name",
-        icon: "error",
-        confirmButtonText: "Ok",
-      });
-      return;
-    }
-    if (itemData.description === "") {
-      Swal.fire({
-        title: "Error!",
-        text: "Enter Item Description",
+        text: "Enter Role",
         icon: "error",
         confirmButtonText: "Ok",
       });
@@ -184,39 +153,49 @@ function ConsumableItem() {
     }
     setShowLoader(true);
     const data = {
-      id: itemData.id,
-      productName: itemData.name,
-      productDescription: itemData.description,
+      roleName: roleData.roleName,
+      id: roleData.id,
     };
     axios
-      .put(`${apiUrl}edit-inventory`, data, {
+      .put(`${apiUrl}/edit-roles`, data, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       })
       .then((response) => {
-        console.log("Response:", response);
         setShowLoader(false);
         setCustomMsg((prevMsg) => ({
           ...prevMsg,
           isVisible: true,
-          text: response?.data?.message,
+          text: "Role updated successfully.",
           type: "success",
         }));
-        setOpen(false);
-        setItemData({
+
+        setRoleData({
           id: "",
-          name: "",
-          description: "",
+          roleName: "",
         });
-        fetchItems();
+        setOpen(false);
+        fetchRole();
       })
       .catch((error) => {
         setShowLoader(false);
-        console.log(error);
+        console.error("Error updating Role:", error);
       });
   };
+
+  const editFeedback = (role) => {
+    setMode("edit");
+    setRoleData({ id: role._id, roleName: role.roleName });
+    setOpen(true);
+  };
+
+  useEffect(() => {
+    if (token !== "") {
+      fetchRole();
+    }
+  }, [token]);
 
   return (
     <Layout>
@@ -226,13 +205,13 @@ function ConsumableItem() {
           <div className="row">
             <div className="col-12">
               <div className="page-title-box d-sm-flex align-items-center justify-content-between">
-                <h4 className="mb-sm-0">Consumable Items</h4>
+                <h4 className="mb-sm-0">Role Master</h4>
                 <div className="page-title-right">
                   <ol className="breadcrumb m-0">
                     <li className="breadcrumb-item">
                       <Link to={"/dashboard"}>Dashboard</Link>
                     </li>
-                    <li className="breadcrumb-item active">Consumable Items</li>
+                    <li className="breadcrumb-item active">Role Master</li>
                   </ol>
                 </div>
               </div>
@@ -241,12 +220,10 @@ function ConsumableItem() {
 
           <div className="row">
             <div className="col-lg-12">
-              <div className="card" id="ticketsList">
+              <div className="card">
                 <div className="card-header border-0">
                   <div className="d-flex align-items-center">
-                    <h5 className="card-title mb-0 flex-grow-1">
-                      Consumable Items
-                    </h5>
+                    <h5 className="card-title mb-0 flex-grow-1">Role Master</h5>
                     <div className="flex-shrink-0">
                       <button
                         className="btn btn-primary add-btn"
@@ -256,7 +233,7 @@ function ConsumableItem() {
                         }}
                       >
                         <i className="ri-add-line align-bottom me-1"></i> Add
-                        Item
+                        Role
                       </button>
                     </div>
                   </div>
@@ -270,73 +247,55 @@ function ConsumableItem() {
                           <th scope="col" style={{ width: "40px" }}>
                             S.No.
                           </th>
-                          <th>Name</th>
-                          <th>Description</th>
+                          <th>Title</th>
                           <th style={{ width: 120 }} align="center">
                             Action
                           </th>
                         </tr>
                       </thead>
                       <tbody className="list form-check-all">
-                        {itemList ? (
-                          itemList.length > 0 ? (
-                            itemList.map((item, index) => (
-                              <tr key={item._id}>
-                                <td>{index + 1}</td>
-                                <td>{item.productName}</td>
-                                <td>{item.productDescription}</td>
-                                <td align="center">
-                                  <button
-                                    className="btn btn-primary btn-sm"
-                                    onClick={() => {
-                                      setMode("edit");
-                                      setItemData({
-                                        id: item._id,
-                                        name: item.productName,
-                                        description: item.productDescription,
-                                      });
-                                      handleClickOpen();
-                                    }}
-                                  >
-                                    <i className="ri-pencil-line"></i>
-                                  </button>
-                                  <button
-                                    className="btn btn-danger btn-sm ms-1"
-                                    onClick={() => {
-                                      Swal.fire({
-                                        title: "Do you really want to delete?",
-                                        icon: "question",
-                                        confirmButtonText: "Yes",
-                                        showDenyButton: true,
-                                      }).then((result) => {
-                                        if (result.isConfirmed) {
-                                          deleteItems(item._id);
-                                        } else if (result.isDenied) {
-                                          Swal.fire(
-                                            "Delete cancelled",
-                                            "",
-                                            "info"
-                                          );
-                                        }
-                                      });
-                                    }}
-                                  >
-                                    <i className="ri-delete-bin-line"></i>
-                                  </button>
-                                </td>
-                              </tr>
-                            ))
-                          ) : (
-                            <tr>
-                              <td colSpan={4} align="center">
-                                No record
+                        {roleList ? (
+                          roleList.map((role, index) => (
+                            <tr key={role._id}>
+                              <td>{index + 1}</td>
+                              <td>{role.roleName}</td>
+                              <td align="center">
+                                <button
+                                  className="btn btn-primary btn-sm"
+                                  onClick={() => editFeedback(role)}
+                                >
+                                  <i className="ri-pencil-line"></i>
+                                </button>
+                                <button
+                                  className="btn btn-danger btn-sm ms-1"
+                                  onClick={() => {
+                                    Swal.fire({
+                                      title: "Do you really want to delete?",
+                                      icon: "question",
+                                      confirmButtonText: "Yes",
+                                      showDenyButton: true,
+                                    }).then((result) => {
+                                      if (result.isConfirmed) {
+                                        deleteFeedback(role._id);
+                                      } else if (result.isDenied) {
+                                        Swal.fire(
+                                          "Delete cancelled",
+                                          "",
+                                          "info"
+                                        );
+                                      }
+                                    });
+                                  }}
+                                >
+                                  <i className="ri-delete-bin-line"></i>
+                                </button>
                               </td>
                             </tr>
-                          )
+                          ))
                         ) : (
                           <tr>
-                            <td colSpan={4} align="center">
-                              Loading...
+                            <td colSpan={3} align="center">
+                              No record
                             </td>
                           </tr>
                         )}
@@ -347,16 +306,22 @@ function ConsumableItem() {
               </div>
             </div>
           </div>
+
           <Dialog
             open={open}
             TransitionComponent={Transition}
             keepMounted
             onClose={handleClose}
             aria-describedby="alert-dialog-slide-description"
+            PaperProps={{
+              style: { width: "600px", maxHeight: "80vh" },
+            }}
+            maxWidth="md"
+            fullWidth
           >
-            <DialogTitle>{mode === "add" ? "Add" : "Update"} Item</DialogTitle>
+            <DialogTitle>{mode === "add" ? "Add" : "Update"} Role</DialogTitle>
             <DialogContent>
-              <form onSubmit={mode === "add" ? addItem : updateItem}>
+              <form onSubmit={mode === "add" ? addRole : updateRole}>
                 <div className="modal-body">
                   <div className="row g-3">
                     <div className="col-lg-12">
@@ -366,24 +331,11 @@ function ConsumableItem() {
                           type="text"
                           className="form-control"
                           placeholder="Name"
-                          name="name"
-                          value={itemData.name}
+                          name="roleName"
+                          value={roleData.roleName}
                           onChange={handleChange}
+                          required
                         />
-                      </div>
-                    </div>
-
-                    <div className="col-lg-12">
-                      <div>
-                        <label className="form-label">Description</label>
-                        <textarea
-                          type="text"
-                          className="form-control"
-                          placeholder="Description"
-                          name="description"
-                          value={itemData.description}
-                          onChange={handleChange}
-                        ></textarea>
                       </div>
                     </div>
                   </div>
@@ -393,7 +345,7 @@ function ConsumableItem() {
                     <button
                       type="button"
                       className="btn btn-light"
-                      onClick={() => handleClose()}
+                      onClick={handleClose}
                     >
                       Close
                     </button>
@@ -402,7 +354,7 @@ function ConsumableItem() {
                       disabled={showLoader}
                       className="btn btn-success"
                     >
-                      {mode === "add" ? "Add" : "Update"} Item
+                      {mode === "add" ? "Add" : "Update"} Role
                     </button>
                   </div>
                 </div>
@@ -414,4 +366,5 @@ function ConsumableItem() {
     </Layout>
   );
 }
-export default ConsumableItem;
+
+export default RoleMaster;

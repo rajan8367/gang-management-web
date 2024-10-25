@@ -21,6 +21,7 @@
     "moment": "^2.30.1",
     "react": "^18.2.0",
     "react-bootstrap": "^2.10.2",
+    "react-datepicker": "^7.5.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.23.1",
     "simplebar-react": "^3.2.5",

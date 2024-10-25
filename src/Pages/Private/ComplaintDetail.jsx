@@ -38,10 +38,16 @@ function ComplaintDetail() {
   const fetchComplaint = () => {
     setShowLoader(true);
     const data = {
-      complaintno: id,
+      registrationDate: "",
+      fromDate: "",
+      toDate: "",
+      complaintStatus: "",
+      complaintID: id,
+      page: 1,
+      limit: 50,
     };
     axios
-      .post(`${apiUrl}list-complaints`, data, {
+      .post(`${apiUrl}get-filter-complaints`, data, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,

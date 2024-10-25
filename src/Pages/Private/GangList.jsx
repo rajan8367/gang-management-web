@@ -10,12 +10,14 @@ import DialogTitle from "@mui/material/DialogTitle";
 import Slide from "@mui/material/Slide";
 import CloseIcon from "@mui/icons-material/Close";
 import { Fab } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
 function GangList() {
   const { token, user, setCustomMsg } = useUserContext();
+  const navigate = useNavigate();
   const [showLoader, setShowLoader] = useState(false);
   const [gangList, setGangList] = useState(null);
   const [open, setOpen] = useState(false);
@@ -23,8 +25,10 @@ function GangList() {
   const [mode, setMode] = useState("add");
   const [userList, setUserList] = useState(null);
   const [selectedGang, setSelectedGang] = useState("");
+  const [categoryList, setCategoryList] = useState(null);
   const [subStationList, setSubStationList] = useState([]);
   const [gangData, setGangData] = useState({
+    category: "",
     gangID: "",
     gangLeaderName: "",
     gangLeaderID: "",
@@ -76,6 +80,7 @@ function GangList() {
       fetchGang();
       getMembers();
       fetchSubstation();
+      fetchGangCategory();
     }
   }, [token]);
 
@@ -87,6 +92,7 @@ function GangList() {
     setOpen(false);
     setGangData((prevGangData) => ({
       ...prevGangData,
+      category: "",
       gangID: "",
       gangLeaderName: "",
       gangLeaderID: "",
@@ -182,6 +188,7 @@ function GangList() {
     e.preventDefault();
     setShowLoader(true);
     const data = {
+      gangCategory: gangData.category,
       gangLeaderName: gangData.gangLeaderName,
       gangLeaderID: gangData.gangLeaderID,
       gangName: gangData.gangName,
@@ -210,6 +217,27 @@ function GangList() {
           text: response?.data?.message,
           type: "success",
         }));
+        setGangData({
+          category: "",
+          gangID: "",
+          gangLeaderName: "",
+          gangLeaderID: "",
+          gangName: "",
+          gangMobile: "",
+          tools_availabe: "",
+          location: "",
+          subStation: "",
+
+          feeder: "",
+          security_equipment: [
+            {
+              item: "security1",
+              quantity: 2,
+            },
+          ],
+          latitude: "",
+          longitude: "",
+        });
         setOpen(false);
         fetchGang();
       })
@@ -225,6 +253,7 @@ function GangList() {
     e.preventDefault();
     setShowLoader(true);
     const data = {
+      gangCategory: gangData.category,
       gangID: gangData.gangID,
       gangLeaderName: gangData.gangLeaderName,
       gangLeaderID: gangData.gangLeaderID,
@@ -261,6 +290,28 @@ function GangList() {
           text: response?.data?.message,
           type: "success",
         }));
+
+        setGangData({
+          category: "",
+          gangID: "",
+          gangLeaderName: "",
+          gangLeaderID: "",
+          gangName: "",
+          gangMobile: "",
+          tools_availabe: "",
+          location: "",
+          subStation: "",
+
+          feeder: "",
+          security_equipment: [
+            {
+              item: "security1",
+              quantity: 2,
+            },
+          ],
+          latitude: "",
+          longitude: "",
+        });
         setOpen(false);
         fetchGang();
       })
@@ -286,6 +337,7 @@ function GangList() {
         console.log("Response:", response);
         setMode("edit");
         const {
+          gangCategory,
           gangName,
           gangMobile,
           gangLeaderName,
@@ -294,9 +346,14 @@ function GangList() {
           location,
           tools_availabe,
           substation_id,
+          latitude,
+          longitude,
         } = response.data.gangs[0];
         setGangData((prevGangData) => ({
           ...prevGangData,
+          latitude: latitude,
+          longitude: longitude,
+          category: gangCategory,
           gangName: gangName,
           gangMobile: gangMobile,
           gangLeaderID: gangLeaderID,
@@ -401,6 +458,26 @@ function GangList() {
         console.log(error);
       });
   };
+  const fetchGangCategory = () => {
+    setShowLoader(true);
+    const data = {};
+    axios
+      .post(`${apiUrl}list-gangCategory`, data, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        console.log("Response:", response);
+        setCategoryList(response.data?.data);
+        setShowLoader(false);
+      })
+      .catch((error) => {
+        setShowLoader(false);
+        console.log(error);
+      });
+  };
   return (
     <Layout>
       {showLoader && <Loader />}
@@ -451,12 +528,11 @@ function GangList() {
                           <th scope="col" style={{ width: "40px" }}>
                             S.No.
                           </th>
+                          <th>Gang Category</th>
                           <th>Gang Name</th>
                           <th>Gang Mobile</th>
-                          {/* <th>Gang Leader Name</th> */}
                           <th>Sub Station</th>
-                          <th>Feeder</th>
-                          {/* <th>Members</th> */}
+                          <th>Lat. - Long.</th>
                           <th align="center">Action</th>
                         </tr>
                       </thead>
@@ -466,30 +542,15 @@ function GangList() {
                           gangList.map((gang, index) => (
                             <tr key={gang._id}>
                               <td scope="row">{index + 1}</td>
+                              <td>{gang.gangCategory}</td>
                               <td>{gang.gangName}</td>
                               <td>{gang.gangMobile}</td>
-                              {/* <td>{gang.gangLeaderName}</td> */}
                               <td>{gang.substation}</td>
 
-                              <td>{gang.feeder}</td>
-                              {/* <td>
-                                {gang?.members?.length > 0 &&
-                                  gang.members.map((member, index) => (
-                                    <p className="mb-0" key={member.memberIDIs}>
-                                      {index + 1}: {member.name}
-                                    </p>
-                                  ))}
-                              </td> */}
                               <td>
-                                {/* <button
-                                  className="btn btn-success me-2"
-                                  onClick={() => {
-                                    setSelectedGang(gang._id);
-                                    setOpenMember(true);
-                                  }}
-                                >
-                                  Assign Member
-                                </button> */}
+                                {gang.latitude} - {gang.longitude}
+                              </td>
+                              <td>
                                 <button
                                   disabled={showLoader}
                                   className="btn btn-danger me-2"
@@ -499,7 +560,7 @@ function GangList() {
                                 </button>
                                 <button
                                   disabled={showLoader}
-                                  className="btn btn-primary"
+                                  className="btn btn-primary me-2"
                                   onClick={() => {
                                     getGangData(gang._id);
                                     setGangData((prevGangData) => ({
@@ -509,6 +570,15 @@ function GangList() {
                                   }}
                                 >
                                   Edit
+                                </button>
+                                <button
+                                  disabled={showLoader}
+                                  className="btn btn-success"
+                                  onClick={() =>
+                                    navigate("/inventory-list/" + gang._id)
+                                  }
+                                >
+                                  Inventory
                                 </button>
                               </td>
                             </tr>
@@ -543,6 +613,25 @@ function GangList() {
                           value={gangData.gangName}
                           onChange={handleChange}
                         />
+                      </div>
+                    </div>
+                    <div className="col-lg-6">
+                      <div>
+                        <label className="form-label">Gang Category</label>
+                        <select
+                          onChange={handleChange}
+                          value={gangData.category}
+                          name="category"
+                          className="form-control"
+                        >
+                          <option>Select category</option>
+                          {categoryList &&
+                            categoryList.map((cat) => (
+                              <option key={cat._id} value={cat.categoryName}>
+                                {cat.categoryName}
+                              </option>
+                            ))}
+                        </select>
                       </div>
                     </div>
                     <div className="col-lg-6">
@@ -600,7 +689,6 @@ function GangList() {
                         </select>
                       </div>
                     </div> */}
-
                     <div className="col-lg-6">
                       <label className="form-label">Feeder</label>
                       <input
@@ -621,6 +709,30 @@ function GangList() {
                         placeholder="Location"
                         name="location"
                         value={gangData.location}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+                    <div className="col-lg-6">
+                      <label className="form-label">Latitude</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Latitude"
+                        name="latitude"
+                        value={gangData.latitude}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+                    <div className="col-lg-6">
+                      <label className="form-label">Longitude</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Longitude"
+                        name="longitude"
+                        value={gangData.longitude}
                         onChange={handleChange}
                         required
                       />

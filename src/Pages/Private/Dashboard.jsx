@@ -16,6 +16,8 @@ import resolved from "./../../assets/images/resolved.png";
 import assignment from "./../../assets/images/assignment.png";
 import hold from "./../../assets/images/hold.png";
 import { useNavigate } from "react-router-dom";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -40,6 +42,15 @@ function Dashboard() {
   const [open, setOpen] = useState(false);
   const [complaintId, setComplaintId] = useState("");
   const [assignType, setAssignType] = useState("");
+  const [dateRange, setDateRange] = useState([null, null]);
+  const [startDate, endDate] = dateRange;
+  const [filterData, setFilterData] = useState({
+    registrationDate: "",
+    fromDate: "",
+    toDate: "",
+    complaintStatus: "",
+    complaintNo: "",
+  });
 
   function formatDate(dateString) {
     // Parse the date string using Moment.js
@@ -53,7 +64,7 @@ function Dashboard() {
     if (token !== "") {
       fetchComplaint();
     }
-  }, [token, status]);
+  }, [token, filterData.complaintStatus]);
   useEffect(() => {
     if (token !== "") {
       fetchGang();
@@ -63,29 +74,27 @@ function Dashboard() {
   const fetchComplaint = () => {
     setShowLoader(true);
     const data = {
-      showCount: "1",
-      durarion: "all",
-      inProgressComplaint: "",
-      resolvedComplaint: "",
-      complaintStatus: status,
-      allComplaint: status === "" ? "1" : "0",
+      registrationDate: filterData.registrationDate,
+      fromDate: filterData.fromDate,
+      toDate: filterData.toDate,
+      complaintStatus: filterData.complaintStatus,
+      complaintID: "",
+      complaintNo: filterData.complaintNo,
+      page: 1,
+      limit: 50,
     };
     axios
-      .post(`${apiUrl}web-dashboard`, data, {
+      .post(`${apiUrl}get-filter-complaints`, data, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       })
       .then((response) => {
-        console.log("Response:", response);
+        console.log("Response:", response?.data?.complaints);
         setShowLoader(false);
-        setCount(response.data.counts);
-        if (status == "") {
-          setComplaint(response?.data?.complaintReport);
-        } else {
-          setComplaint(response?.data?.complaintByStatusReport);
-        }
+        setComplaint(response?.data?.complaints);
+        setCount(response.data.statusCounts);
       })
       .catch((error) => {
         setShowLoader(false);
@@ -112,9 +121,6 @@ function Dashboard() {
     } else {
       return "Good Evening";
     }
-  };
-  const handleClickOpen = () => {
-    setOpen(true);
   };
 
   const handleClose = () => {
@@ -206,8 +212,64 @@ function Dashboard() {
         console.log(error);
       });
   };
+
   const viewDetail = (complaintId) => {
     navigate("/complaint-detail/" + complaintId);
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFilterData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+  const convertDate = (date) =>
+    date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
+
+  useEffect(() => {
+    if (startDate && endDate) {
+      setFilterData((prevData) => ({
+        ...prevData,
+        fromDate: convertDate(startDate),
+        toDate: convertDate(endDate),
+      }));
+    } else {
+      setFilterData((prevData) => ({
+        ...prevData,
+        fromDate: "",
+        toDate: "",
+      }));
+    }
+  }, [dateRange]);
+  const assignToDispatcher = (id) => {
+    setShowLoader(true);
+    const data = {
+      complain_no: id,
+    };
+    axios
+      .put(`${apiUrl}assign-to-dispatcher`, data, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        console.log("Response:", response);
+        setOpen(false);
+        setCustomMsg((prevMsg) => ({
+          ...prevMsg,
+          isVisible: true,
+          text: response?.data?.message,
+          type: "success",
+        }));
+        fetchComplaint();
+        setShowLoader(false);
+      })
+      .catch((error) => {
+        setShowLoader(false);
+        console.log(error);
+      });
   };
   return (
     <Layout>
@@ -218,14 +280,6 @@ function Dashboard() {
             <div className="col-12">
               <div className="page-title-box d-sm-flex align-items-center justify-content-between">
                 <h4 className="mb-sm-0">Dashboard</h4>
-                <div className="page-title-right">
-                  <ol className="breadcrumb m-0">
-                    <li className="breadcrumb-item">
-                      <a href="#">Dashboards</a>
-                    </li>
-                    <li className="breadcrumb-item active">Dashboard</li>
-                  </ol>
-                </div>
               </div>
             </div>
           </div>
@@ -240,42 +294,78 @@ function Dashboard() {
                         <h4 className="fs-16 mb-1">
                           {greet}, {user?.DIVISION_NAME}!
                         </h4>
-                        {/* <p className="text-muted mb-0">
-                          {user?.type} ({user?.sub_station_name})
-                        </p> */}
                       </div>
-                      {/* <div className="mt-3 mt-lg-0">
+                      <div className="mt-3 mt-lg-0">
                         <form action="#">
                           <div className="row g-3 mb-0 align-items-center">
                             <div className="col-sm-auto">
-                              <div className="input-group">
-                                <input
-                                  type="text"
-                                  className="form-control border-0 dash-filter-picker shadow"
-                                  data-provider="flatpickr"
-                                  data-range-date="true"
-                                  data-date-format="d M, Y"
-                                  data-deafult-date="01 Jan 2022 to 31 Jan 2022"
-                                />
-                                <div className="input-group-text bg-primary border-primary text-white">
-                                  <i className="ri-calendar-2-line"></i>
-                                </div>
-                              </div>
+                              <DatePicker
+                                selectsRange={true}
+                                startDate={startDate}
+                                endDate={endDate}
+                                onChange={(date) => {
+                                  setDateRange(date);
+                                }}
+                                isClearable={true}
+                                placeholderText="Select from to date"
+                                className="form-control shadow"
+                              />
+                            </div>
+                            <div className="col-sm-auto">
+                              <select
+                                className="form-select shadow"
+                                onChange={handleChange}
+                                name="complaintStatus"
+                                value={filterData.complaintStatus}
+                              >
+                                <option value="">All Complaints</option>
+                                {complaintStatus.map((status) => (
+                                  <option key={status} value={status}>
+                                    {status}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className="col-sm-auto">
+                              <input
+                                type="text"
+                                className="form-control shadow"
+                                placeholder="Complaint Number"
+                                value={filterData.complaintNo}
+                                name="complaintNo"
+                                onChange={handleChange}
+                              />
+                            </div>
+                            <div className="col-sm-auto">
+                              <button
+                                type="button"
+                                className="btn btn-primary shadow"
+                                onClick={() => fetchComplaint()}
+                              >
+                                Apply
+                              </button>
                             </div>
                           </div>
                         </form>
-                      </div> */}
+                      </div>
                     </div>
                   </div>
                 </div>
+
                 <div className="row">
                   <div
                     className="col-xl-2 col-md-6 cursor-pointer"
-                    onClick={() => setStatus("")}
+                    onClick={() =>
+                      setFilterData((prevData) => ({
+                        ...prevData,
+                        complaintStatus: "",
+                      }))
+                    }
                   >
                     <div
                       className={`card card-animate ${
-                        status === "" && "border border-success"
+                        filterData.complaintStatus === "" &&
+                        "border border-success"
                       }`}
                     >
                       <div className="card-body">
@@ -311,11 +401,17 @@ function Dashboard() {
 
                   <div
                     className="col-xl-2 col-md-6"
-                    onClick={() => setStatus("Open")}
+                    onClick={() =>
+                      setFilterData((prevData) => ({
+                        ...prevData,
+                        complaintStatus: "Open",
+                      }))
+                    }
                   >
                     <div
                       className={`card card-animate ${
-                        status === "Open" && "border border-success"
+                        filterData.complaintStatus === "Open" &&
+                        "border border-success"
                       }`}
                     >
                       <div className="card-body">
@@ -326,25 +422,16 @@ function Dashboard() {
                             </p>
                           </div>
                           <div className="flex-shrink-0">
-                            <h5 className="text-danger fs-14 mb-0">
-                              {/* <i className="ri-arrow-right-down-line fs-13 align-middle"></i>{" "}
-                              -3.57 % */}
-                            </h5>
+                            <h5 className="text-danger fs-14 mb-0"></h5>
                           </div>
                         </div>
                         <div className="d-flex align-items-end justify-content-between mt-4">
                           <div>
                             <h4 className="fs-22 fw-semibold ff-secondary">
                               <span className="counter-value" data-target="368">
-                                {count?.Open}
+                                {count?.open}
                               </span>
                             </h4>
-                            {/* <a
-                              href="complaint-list.html"
-                              className="text-decoration-underline"
-                            >
-                              View all
-                            </a> */}
                           </div>
                           <div className="avatar-sm flex-shrink-0">
                             <span className="avatar-title bg-soft-info rounded fs-3">
@@ -358,11 +445,17 @@ function Dashboard() {
 
                   <div
                     className={`col-xl-2 col-md-6 cursor-pointer`}
-                    onClick={() => setStatus("Assigned")}
+                    onClick={() =>
+                      setFilterData((prevData) => ({
+                        ...prevData,
+                        complaintStatus: "Assigned",
+                      }))
+                    }
                   >
                     <div
                       className={`card card-animate ${
-                        status === "Closed" && "border border-success"
+                        filterData.complaintStatus === "Assigned" &&
+                        "border border-success"
                       }`}
                     >
                       <div className="card-body">
@@ -373,23 +466,14 @@ function Dashboard() {
                               Assigned
                             </p>
                           </div>
-                          {/* <div className="flex-shrink-0">
-                            <h5 className="text-muted fs-14 mb-0">+0.01 %</h5>
-                          </div> */}
                         </div>
                         <div className="d-flex align-items-end justify-content-between mt-4">
                           <div>
                             <h4 className="fs-22 fw-semibold ff-secondary">
                               <span className="counter-value" data-target="165">
-                                {count?.Assigned}
+                                {count?.assigned}
                               </span>
                             </h4>
-                            {/*  <a
-                              href="complaint-list.html"
-                              className="text-decoration-underline"
-                            >
-                              See details
-                            </a> */}
                           </div>
                           <div className="avatar-sm flex-shrink-0">
                             <span className="avatar-title bg-soft-primary rounded fs-3">
@@ -402,11 +486,17 @@ function Dashboard() {
                   </div>
                   <div
                     className="col-xl-2 col-md-6 cursor-pointer"
-                    onClick={() => setStatus("InProgress")}
+                    onClick={() =>
+                      setFilterData((prevData) => ({
+                        ...prevData,
+                        complaintStatus: "InProgress",
+                      }))
+                    }
                   >
                     <div
                       className={`card card-animate ${
-                        status === "InProgress" && "border border-success"
+                        filterData.complaintStatus === "InProgress" &&
+                        "border border-success"
                       }`}
                     >
                       <div className="card-body">
@@ -417,22 +507,16 @@ function Dashboard() {
                             </p>
                           </div>
                           <div className="flex-shrink-0">
-                            <h5 className="text-success fs-14 mb-0">
-                              {/* <i className="ri-arrow-right-up-line fs-13 align-middle"></i>{" "}
-                              +29.08 % */}
-                            </h5>
+                            <h5 className="text-success fs-14 mb-0"></h5>
                           </div>
                         </div>
                         <div className="d-flex align-items-end justify-content-between mt-4">
                           <div>
                             <h4 className="fs-22 fw-semibold ff-secondary">
                               <span className="counter-value" data-target="66">
-                                {count?.InProgress}
+                                {count?.inProgress}
                               </span>{" "}
                             </h4>
-                            {/* <a href="#" className="text-decoration-underline">
-                              See details
-                            </a> */}
                           </div>
                           <div className="avatar-sm flex-shrink-0">
                             <span className="avatar-title bg-soft-warning rounded fs-3">
@@ -449,11 +533,17 @@ function Dashboard() {
 
                   <div
                     className={`col-xl-2 col-md-6 cursor-pointer`}
-                    onClick={() => setStatus("OnHold")}
+                    onClick={() =>
+                      setFilterData((prevData) => ({
+                        ...prevData,
+                        complaintStatus: "OnHold",
+                      }))
+                    }
                   >
                     <div
                       className={`card card-animate ${
-                        status === "Closed" && "border border-success"
+                        filterData.complaintStatus === "OnHold" &&
+                        "border border-success"
                       }`}
                     >
                       <div className="card-body">
@@ -464,23 +554,14 @@ function Dashboard() {
                               On Hold
                             </p>
                           </div>
-                          {/* <div className="flex-shrink-0">
-                            <h5 className="text-muted fs-14 mb-0">+0.01 %</h5>
-                          </div> */}
                         </div>
                         <div className="d-flex align-items-end justify-content-between mt-4">
                           <div>
                             <h4 className="fs-22 fw-semibold ff-secondary">
                               <span className="counter-value" data-target="165">
-                                {count?.Hold}
+                                {count?.onHold}
                               </span>
                             </h4>
-                            {/*  <a
-                              href="complaint-list.html"
-                              className="text-decoration-underline"
-                            >
-                              See details
-                            </a> */}
                           </div>
                           <div className="avatar-sm flex-shrink-0">
                             <span className="avatar-title bg-soft-primary rounded fs-3">
@@ -494,11 +575,17 @@ function Dashboard() {
 
                   <div
                     className={`col-xl-2 col-md-6 cursor-pointer`}
-                    onClick={() => setStatus("Resolved")}
+                    onClick={() =>
+                      setFilterData((prevData) => ({
+                        ...prevData,
+                        complaintStatus: "Resolved",
+                      }))
+                    }
                   >
                     <div
                       className={`card card-animate ${
-                        status === "Closed" && "border border-success"
+                        filterData.complaintStatus === "Resolved" &&
+                        "border border-success"
                       }`}
                     >
                       <div className="card-body">
@@ -509,23 +596,14 @@ function Dashboard() {
                               Resolved
                             </p>
                           </div>
-                          {/* <div className="flex-shrink-0">
-                            <h5 className="text-muted fs-14 mb-0">+0.01 %</h5>
-                          </div> */}
                         </div>
                         <div className="d-flex align-items-end justify-content-between mt-4">
                           <div>
                             <h4 className="fs-22 fw-semibold ff-secondary">
                               <span className="counter-value" data-target="165">
-                                {count?.Resolved}
+                                {count?.resolved}
                               </span>
                             </h4>
-                            {/*  <a
-                              href="complaint-list.html"
-                              className="text-decoration-underline"
-                            >
-                              See details
-                            </a> */}
                           </div>
                           <div className="avatar-sm flex-shrink-0">
                             <span className="avatar-title bg-soft-primary rounded fs-3">
@@ -537,6 +615,7 @@ function Dashboard() {
                     </div>
                   </div>
                 </div>
+
                 <div className="row">
                   <div className="col-xl-12">
                     <div className="card">
@@ -544,7 +623,7 @@ function Dashboard() {
                         <h4 className="card-title mb-0 flex-grow-1">
                           Complaints List
                         </h4>
-                        <div className="flex-shrink-0">
+                        {/* <div className="flex-shrink-0">
                           <div className="dropdown card-header-dropdown">
                             <a
                               className="text-reset dropdown-btn"
@@ -581,7 +660,7 @@ function Dashboard() {
                               ))}
                             </div>
                           </div>
-                        </div>
+                        </div> */}
                       </div>
                       <div className="table-responsive px-4 mt-4 table-card overflow-auto">
                         <table className="table table-centered align-middle text-nowrap">
@@ -595,13 +674,14 @@ function Dashboard() {
                               <th>Date</th>
                               <th>Status</th>
                               <th>Assigned To</th>
+                              <th>Forward To Dispatcher</th>
                               <th>Re Assign</th>
                               <th>View</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {complaint?.complaints?.length > 0 ? (
-                              complaint?.complaints.map((complaint, index) => (
+                            {complaint && complaint.length > 0 ? (
+                              complaint.map((complaint, index) => (
                                 <tr key={complaint._id}>
                                   <td>{index + 1}</td>
                                   <td>{complaint.complaintNo}</td>
@@ -628,6 +708,17 @@ function Dashboard() {
                                     ) : (
                                       complaint?.gangDetail?.gangName
                                     )}
+                                  </td>
+                                  <td align="center">
+                                    <button
+                                      className="btn btn-primary"
+                                      onClick={() => {
+                                        assignToDispatcher(complaint._id);
+                                      }}
+                                      disabled={showLoader}
+                                    >
+                                      Forward
+                                    </button>
                                   </td>
                                   <td>
                                     {complaint.complaintStatus ===

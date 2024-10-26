@@ -220,7 +220,7 @@ function GangCategoryList() {
                 <div className="card-header border-0">
                   <div className="d-flex align-items-center">
                     <h5 className="card-title mb-0 flex-grow-1">
-                      Gang Category
+                      {/* Gang Category */}
                     </h5>
                     <div className="flex-shrink-0">
                       <button

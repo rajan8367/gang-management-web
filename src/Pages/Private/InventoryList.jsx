@@ -39,7 +39,7 @@ function InventoryList() {
       fetchItems();
       fetchStock();
     }
-  }, [token]);
+  }, [token, listType]);
 
   const handleClickOpen = () => {
     setOpen(true);

@@ -80,7 +80,7 @@ function Sidebar() {
               </Link>
               
             </li> */}
-            {userType !== "admin" && (
+            {userType !== "admin" && userType !== "dispatcher" && (
               <li className="nav-item">
                 <Link
                   to="/gang-list"

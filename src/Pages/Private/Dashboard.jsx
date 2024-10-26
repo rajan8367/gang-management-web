@@ -65,11 +65,6 @@ function Dashboard() {
       fetchComplaint();
     }
   }, [token, filterData.complaintStatus]);
-  useEffect(() => {
-    if (token !== "") {
-      fetchGang();
-    }
-  }, [token]);
 
   const fetchComplaint = () => {
     setShowLoader(true);
@@ -127,14 +122,18 @@ function Dashboard() {
     setOpen(false);
   };
 
-  const fetchGang = () => {
+  const fetchGang = (id) => {
     setShowLoader(true);
     const data = {
-      search: "",
-      gangID: "",
+      complaintID: id,
+      byZone: 0,
+      byCircle: 0,
+      byDivision: 0,
+      bySubDivision: 0,
+      bySubstation: 1,
     };
     axios
-      .post(`${apiUrl}list-gang`, data, {
+      .post(`${apiUrl}gang-list-complaintWise`, data, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -142,7 +141,7 @@ function Dashboard() {
       })
       .then((response) => {
         console.log("Response:", response);
-        setGangList(response?.data?.gangs);
+        setGangList(response?.data?.data);
         setShowLoader(false);
       })
       .catch((error) => {
@@ -242,35 +241,44 @@ function Dashboard() {
       }));
     }
   }, [dateRange]);
+
   const assignToDispatcher = (id) => {
     setShowLoader(true);
     const data = {
       complain_no: id,
     };
+
     axios
-      .put(`${apiUrl}assign-to-dispatcher`, data, {
+      .post(`${apiUrl}assign-to-dispatcher`, data, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       })
       .then((response) => {
+        const message = response?.data?.message;
         console.log("Response:", response);
         setOpen(false);
-        setCustomMsg((prevMsg) => ({
-          ...prevMsg,
+        setCustomMsg({
           isVisible: true,
-          text: response?.data?.message,
+          text: message,
           type: "success",
-        }));
+        });
         fetchComplaint();
-        setShowLoader(false);
       })
       .catch((error) => {
-        setShowLoader(false);
         console.log(error);
+        setCustomMsg({
+          isVisible: true,
+          text: "Failed to assign to dispatcher. Please try again.",
+          type: "error",
+        });
+      })
+      .finally(() => {
+        setShowLoader(false);
       });
   };
+
   return (
     <Layout>
       {showLoader && <Loader />}
@@ -291,7 +299,10 @@ function Dashboard() {
                   <div className="col-12">
                     <div className="d-flex align-items-lg-center flex-lg-row flex-column">
                       <div className="flex-grow-1">
-                        <h4 className="fs-16 mb-1">
+                        <h4
+                          className="fs-16 mb-1"
+                          style={{ textTransform: "capitalize" }}
+                        >
                           {greet}, {user?.DIVISION_NAME}!
                         </h4>
                       </div>
@@ -663,19 +674,24 @@ function Dashboard() {
                         </div> */}
                       </div>
                       <div className="table-responsive px-4 mt-4 table-card overflow-auto">
-                        <table className="table table-centered align-middle text-nowrap">
+                        <table className="table table-centered align-middle">
                           <thead className="bg-light text-muted">
                             <tr>
-                              <th>S.No.</th>
+                              {/* <th>S.No.</th> */}
                               <th>Complaint No.</th>
+                              <th>Consumer Account</th>
                               <th>Consumer Name</th>
                               <th>Consumer Mobile</th>
                               <th>Consumer Address</th>
                               <th>Date</th>
                               <th>Status</th>
                               <th>Assigned To</th>
-                              <th>Forward To Dispatcher</th>
-                              <th>Re Assign</th>
+                              {userType !== "dispatcher" && (
+                                <>
+                                  <th>Forward To Dispatcher</th>
+                                  <th>Re Assign</th>
+                                </>
+                              )}
                               <th>View</th>
                             </tr>
                           </thead>
@@ -683,12 +699,13 @@ function Dashboard() {
                             {complaint && complaint.length > 0 ? (
                               complaint.map((complaint, index) => (
                                 <tr key={complaint._id}>
-                                  <td>{index + 1}</td>
+                                  {/* <td>{index + 1}</td> */}
                                   <td>{complaint.complaintNo}</td>
+                                  <td>{complaint.consumerAccountNo}</td>
                                   <td>{complaint.consumerName}</td>
                                   <td>{complaint.consumerMobile}</td>
                                   <td>{complaint.consumerAddress}</td>
-                                  <td>
+                                  <td className="text-nowrap">
                                     {formatDate(complaint.registrationDate)}
                                   </td>
                                   <td>{complaint.complaintStatus}</td>
@@ -700,42 +717,59 @@ function Dashboard() {
                                           setOpen(true);
                                           setComplaintId(complaint._id);
                                           setAssignType("assign");
+                                          fetchGang(complaint._id);
                                         }}
                                         disabled={showLoader}
                                       >
-                                        Assign to Gang
+                                        Assign
                                       </button>
                                     ) : (
-                                      complaint?.gangDetail?.gangName
+                                      <>
+                                        {complaint?.gangDetail?.gangName}
+                                        <br />
+                                        {complaint?.gangDetail?.gangMobileNo}
+                                      </>
                                     )}
                                   </td>
-                                  <td align="center">
-                                    <button
-                                      className="btn btn-primary"
-                                      onClick={() => {
-                                        assignToDispatcher(complaint._id);
-                                      }}
-                                      disabled={showLoader}
-                                    >
-                                      Forward
-                                    </button>
-                                  </td>
-                                  <td>
-                                    {complaint.complaintStatus ===
-                                      "Assigned" && (
-                                      <button
-                                        className="btn btn-success"
-                                        onClick={() => {
-                                          setOpen(true);
-                                          setComplaintId(complaint._id);
-                                          setAssignType("reAssign");
-                                        }}
-                                        disabled={showLoader}
-                                      >
-                                        Re Assign
-                                      </button>
-                                    )}
-                                  </td>
+
+                                  {userType !== "dispatcher" && (
+                                    <td align="center">
+                                      {complaint.fwdToDispatcher == 0 &&
+                                        complaint.complaintStatus !==
+                                          "InProgress" &&
+                                        complaint.complaintStatus !==
+                                          "OnHold" && (
+                                          <button
+                                            className="btn btn-primary"
+                                            onClick={() => {
+                                              assignToDispatcher(complaint._id);
+                                            }}
+                                            disabled={showLoader}
+                                          >
+                                            Forward
+                                          </button>
+                                        )}
+                                    </td>
+                                  )}
+                                  {userType !== "dispatcher" && (
+                                    <td className="text-nowrap">
+                                      {complaint.complaintStatus ===
+                                        "Assigned" && (
+                                        <button
+                                          className="btn btn-success"
+                                          onClick={() => {
+                                            setOpen(true);
+                                            setComplaintId(complaint._id);
+                                            setAssignType("reAssign");
+                                            fetchGang(complaint._id);
+                                          }}
+                                          disabled={showLoader}
+                                        >
+                                          Re Assign
+                                        </button>
+                                      )}
+                                    </td>
+                                  )}
                                   <td>
                                     <button
                                       className="btn btn-primary"

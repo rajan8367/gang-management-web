@@ -175,6 +175,7 @@ function Login() {
                               <option value="division">Division</option>
                               <option value="circle">Circle</option>
                               <option value="admin">Admin</option>
+                              <option value="dispatcher">Dispatcher</option>
                             </select>
                           </div>
                           <div className="mb-3">

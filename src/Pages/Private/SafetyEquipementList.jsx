@@ -250,7 +250,7 @@ function SafetyEquipmentList() {
                 <div className="card-header border-0">
                   <div className="d-flex align-items-center">
                     <h5 className="card-title mb-0 flex-grow-1">
-                      Safety Checklist
+                      {/* Safety Checklist */}
                     </h5>
                     <div className="flex-shrink-0">
                       <button

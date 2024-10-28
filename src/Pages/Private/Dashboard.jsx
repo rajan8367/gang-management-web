@@ -736,9 +736,7 @@ function Dashboard() {
                                     <td align="center">
                                       {complaint.fwdToDispatcher == 0 &&
                                         complaint.complaintStatus !==
-                                          "InProgress" &&
-                                        complaint.complaintStatus !==
-                                          "OnHold" && (
+                                          "InProgress" && (
                                           <button
                                             className="btn btn-primary"
                                             onClick={() => {

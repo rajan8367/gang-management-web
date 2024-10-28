@@ -120,7 +120,7 @@ function Sidebar() {
                     } `}
                   >
                     <i className="ri-shield-line"></i>
-                    <span data-key="t-apps">Safety Equipment</span>
+                    <span data-key="t-apps">Safety Checklist</span>
                   </Link>
                 </li>
                 <li className="nav-item">

@@ -37,10 +37,13 @@ function InventoryList() {
     if (token !== "") {
       fetchInventory();
       fetchItems();
+    }
+  }, [token]);
+  useEffect(() => {
+    if (token !== "") {
       fetchStock();
     }
-  }, [token, listType]);
-
+  }, [token, inventoryList]);
   const handleClickOpen = () => {
     setOpen(true);
   };
@@ -298,7 +301,7 @@ function InventoryList() {
 
           <div className="row">
             <div className="col-lg-12">
-              <div className="card" id="ticketsList">
+              <div className="card">
                 <div className="card-header border-0">
                   <div className="d-flex align-items-center">
                     <h5 className="card-title mb-0 flex-grow-1">
@@ -330,7 +333,11 @@ function InventoryList() {
                     </div>
                   </div>
                 </div>
-
+                <div className="col-lg-12">
+                  <h5 className="ps-3">
+                    {listType === "stock" ? "Current Stock" : "Inventory Log"}
+                  </h5>
+                </div>
                 <div className="card-body">
                   <div className="table-responsive table-card mb-4">
                     {listType === "inventory" ? (

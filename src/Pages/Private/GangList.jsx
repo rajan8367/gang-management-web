@@ -11,6 +11,8 @@ import Slide from "@mui/material/Slide";
 import CloseIcon from "@mui/icons-material/Close";
 import { Fab } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import MapPicker from "../../Component/MapPicker";
+import Swal from "sweetalert2";
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
@@ -27,6 +29,9 @@ function GangList() {
   const [selectedGang, setSelectedGang] = useState("");
   const [categoryList, setCategoryList] = useState(null);
   const [subStationList, setSubStationList] = useState([]);
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
+  const [openMap, setOpenMap] = useState(false);
   const [gangData, setGangData] = useState({
     category: "",
     gangID: "",
@@ -186,6 +191,84 @@ function GangList() {
   };
   const addGang = (e) => {
     e.preventDefault();
+    if (gangData.gangName === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Enter Gang Name",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
+    if (gangData.category === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Select category",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
+
+    if (gangData.gangMobile === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Enter mobile number",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
+
+    if (gangData.subStation === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Select Sub station",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
+
+    if (gangData.feeder === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Enter Feeder Name",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
+
+    if (gangData.location === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Enter Location Name",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
+
+    if (gangData.latitude === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Select Lat. Long by clicking pick location",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
+
+    if (gangData.tools_availabe === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Select tool available",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
     setShowLoader(true);
     const data = {
       gangCategory: gangData.category,
@@ -248,9 +331,85 @@ function GangList() {
   };
 
   const updateGang = (e) => {
-    console.log(gangData.subStation);
-    //alert("gangData.subStation:", gangData.subStation);
     e.preventDefault();
+    if (gangData.gangName === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Enter Gang Name",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
+    if (gangData.category === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Select category",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
+
+    if (gangData.gangMobile === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Enter mobile number",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
+
+    if (gangData.subStation === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Select Sub station",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
+
+    if (gangData.feeder === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Enter Feeder Name",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
+
+    if (gangData.location === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Enter Location Name",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
+
+    if (gangData.latitude === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Select Lat. Long by clicking pick location",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
+
+    if (gangData.tools_availabe === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Select tool available",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
     setShowLoader(true);
     const data = {
       gangCategory: gangData.category,
@@ -548,13 +707,30 @@ function GangList() {
                               <td>{gang.substation}</td>
 
                               <td>
-                                {gang.latitude} - {gang.longitude}
+                                {gang.latitude}, {gang.longitude}
                               </td>
                               <td>
                                 <button
                                   disabled={showLoader}
                                   className="btn btn-danger me-2"
-                                  onClick={() => deleteGang(gang._id)}
+                                  onClick={() => {
+                                    Swal.fire({
+                                      title: "Do you really want to delete?",
+                                      icon: "question",
+                                      confirmButtonText: "Yes",
+                                      showDenyButton: true,
+                                    }).then((result) => {
+                                      if (result.isConfirmed) {
+                                        deleteGang(gang._id);
+                                      } else if (result.isDenied) {
+                                        Swal.fire(
+                                          "Delete cancelled",
+                                          "",
+                                          "info"
+                                        );
+                                      }
+                                    });
+                                  }}
                                 >
                                   Delete
                                 </button>
@@ -590,6 +766,45 @@ function GangList() {
               </div>
             </div>
           </div>
+
+          <Dialog
+            open={openMap}
+            TransitionComponent={Transition}
+            keepMounted
+            onClose={() => setOpenMap(false)}
+            maxWidth="lg"
+            fullScreen
+            sx={{ zIndex: 99999 }}
+          >
+            <DialogTitle>
+              {mode === "add" ? "Add" : "Update"} Location
+            </DialogTitle>
+            <DialogContent>
+              <MapPicker
+                setLatitude={(e) =>
+                  setGangData((prevGangData) => ({
+                    ...prevGangData,
+                    latitude: e,
+                  }))
+                }
+                setLongitude={(e) =>
+                  setGangData((prevGangData) => ({
+                    ...prevGangData,
+                    longitude: e,
+                  }))
+                }
+              />
+              {gangData.latitude !== "" && (
+                <button
+                  className="btn btn-primary mt-3"
+                  onClick={() => setOpenMap(false)}
+                >
+                  Save
+                </button>
+              )}
+            </DialogContent>
+          </Dialog>
+
           <Dialog
             open={open}
             TransitionComponent={Transition}
@@ -644,7 +859,6 @@ function GangList() {
                           name="gangMobile"
                           value={gangData.gangMobile}
                           onChange={handleChange}
-                          required
                         />
                       </div>
                     </div>
@@ -698,7 +912,6 @@ function GangList() {
                         name="feeder"
                         value={gangData.feeder}
                         onChange={handleChange}
-                        required
                       />
                     </div>
                     <div className="col-lg-6">
@@ -710,9 +923,9 @@ function GangList() {
                         name="location"
                         value={gangData.location}
                         onChange={handleChange}
-                        required
                       />
                     </div>
+
                     <div className="col-lg-6">
                       <label className="form-label">Latitude</label>
                       <input
@@ -722,7 +935,7 @@ function GangList() {
                         name="latitude"
                         value={gangData.latitude}
                         onChange={handleChange}
-                        required
+                        readOnly
                       />
                     </div>
                     <div className="col-lg-6">
@@ -734,8 +947,18 @@ function GangList() {
                         name="longitude"
                         value={gangData.longitude}
                         onChange={handleChange}
-                        required
+                        readOnly
                       />
+                    </div>
+                    <div className="col-lg-6">
+                      <label className="form-label">&nbsp;</label>
+                      <button
+                        className="btn btn-primary w-100"
+                        type="button"
+                        onClick={() => setOpenMap(true)}
+                      >
+                        Pick Loaction
+                      </button>
                     </div>
                     <div className="col-lg-6">
                       <label className="form-label">Is tools available?</label>
@@ -748,7 +971,6 @@ function GangList() {
                             value="yes"
                             checked={gangData.tools_availabe === "yes"}
                             onChange={handleChange}
-                            required
                           />
                           <label
                             className="form-check-label"
@@ -765,7 +987,6 @@ function GangList() {
                             checked={gangData.tools_availabe === "no"}
                             value="no"
                             onChange={handleChange}
-                            required
                           />
                           <label
                             className="form-check-label"

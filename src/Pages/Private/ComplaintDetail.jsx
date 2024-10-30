@@ -1,12 +1,7 @@
 import Layout from "../../Component/Layout";
-import transferDamage from "./../../assets/images/small/transfer-damange.png";
-import repair from "./../../assets/images/small/transfer-repair2.png";
-import repair2 from "./../../assets/images/small/transfer-repair.png";
-import transformer from "./../../assets/images/small/transform-img.png";
 import googlemapicon from "./../../assets/images/google-map-icon.png";
 import avatar from "./../../assets/images/users/avatar-8.jpg";
 import avatar7 from "./../../assets/images/users/avatar-7.jpg";
-import avatar6 from "./../../assets/images/users/avatar-6.jpg";
 import { useEffect, useState } from "react";
 import "./../../assets/css/swiper-bundle.min.css";
 import SimpleBar from "simplebar-react";
@@ -15,8 +10,7 @@ import { useParams } from "react-router-dom";
 import { useUserContext } from "../../hooks/userContext";
 import axios from "axios";
 import { apiUrl, formatDate } from "../../Constant";
-
-//register();
+import "leaflet/dist/leaflet.css";
 
 function ComplaintDetail() {
   const { id } = useParams();
@@ -32,7 +26,7 @@ function ComplaintDetail() {
   }, [token]);
   useEffect(() => {
     if (complaintData) {
-      getAddressFromLatLng();
+      //getAddressFromLatLng();
     }
   }, [complaintData]);
   const fetchComplaint = () => {
@@ -257,6 +251,62 @@ function ComplaintDetail() {
                   </div>
                 </div>
               </div>
+
+              <div className="card">
+                <div className="card-header align-items-center d-flex">
+                  <h4 className="card-title mb-0 flex-grow-1">Safety Checks</h4>
+                </div>
+
+                <div className="card-body">
+                  <div className="live-preview">
+                    <div className="row g-2  mb-2">
+                      <table className="table align-middle table-nowrap mb-0">
+                        <thead>
+                          <th>Checks</th>
+                        </thead>
+                        <tbody>
+                          {complaintData?.safetyChecks.length > 0 &&
+                            complaintData?.safetyChecks.map((safety) => (
+                              <tr key={safety._id}>
+                                <td>{safety?.checkName}</td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="card">
+                <div className="card-header align-items-center d-flex">
+                  <h4 className="card-title mb-0 flex-grow-1">
+                    Consumable Items
+                  </h4>
+                </div>
+
+                <div className="card-body">
+                  <div className="live-preview">
+                    <div className="row g-2  mb-2">
+                      <table className="table align-middle table-nowrap mb-0">
+                        <thead>
+                          <th>product Name</th>
+                          <th>Quantity</th>
+                        </thead>
+                        <tbody>
+                          {complaintData?.consumedItems.length > 0 &&
+                            complaintData?.consumedItems.map((consume) => (
+                              <tr key={consume._id}>
+                                <td>{consume?.itemName}</td>
+                                <td>{consume?.quantity}</td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="card">
                 <div className="card-header">
                   <div>

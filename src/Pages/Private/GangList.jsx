@@ -29,6 +29,7 @@ function GangList() {
   const [selectedGang, setSelectedGang] = useState("");
   const [categoryList, setCategoryList] = useState(null);
   const [subStationList, setSubStationList] = useState([]);
+  const [divisionList, setDivisionList] = useState([]);
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
   const [openMap, setOpenMap] = useState(false);
@@ -41,6 +42,7 @@ function GangList() {
     gangMobile: "",
     tools_availabe: "",
     location: "",
+    division: "",
     subStation: "",
 
     feeder: "",
@@ -56,12 +58,6 @@ function GangList() {
 
   useEffect(() => {
     if (user?.substation_id !== undefined) {
-      /*  setGangData((prevGangData) => ({
-        ...prevGangData,
-        substation_id: user.substation_id,
-        substation: user.sub_station_name,
-      })); */
-
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
@@ -84,11 +80,13 @@ function GangList() {
     if (token !== "") {
       fetchGang();
       getMembers();
-      fetchSubstation();
+      fetchDivision();
       fetchGangCategory();
     }
   }, [token]);
-
+  useEffect(() => {
+    if (gangData.division !== "") fetchSubstation();
+  }, [gangData.division]);
   const handleClickOpen = () => {
     setOpen(true);
   };
@@ -130,9 +128,29 @@ function GangList() {
         console.log(error);
       });
   };
-  const fetchSubstation = () => {
+  const fetchDivision = () => {
     setShowLoader(true);
     const data = {};
+    axios
+      .post(`${apiUrl}get-divisions`, data, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        console.log("Response:", response);
+        setDivisionList(response?.data?.divisions);
+        setShowLoader(false);
+      })
+      .catch((error) => {
+        setShowLoader(false);
+        console.log(error);
+      });
+  };
+  const fetchSubstation = () => {
+    setShowLoader(true);
+    const data = { divisionID: gangData.division };
     axios
       .post(`${apiUrl}list-substation`, data, {
         headers: {
@@ -220,6 +238,16 @@ function GangList() {
       return;
     }
 
+    if (gangData.division === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Select Division",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
+
     if (gangData.subStation === "") {
       Swal.fire({
         title: "Error!",
@@ -271,7 +299,7 @@ function GangList() {
     }
     setShowLoader(true);
     const data = {
-      gangCategory: gangData.category,
+      gangCategoryID: gangData.category,
       gangLeaderName: gangData.gangLeaderName,
       gangLeaderID: gangData.gangLeaderID,
       gangName: gangData.gangName,
@@ -504,10 +532,12 @@ function GangList() {
           feeder,
           location,
           tools_availabe,
+          division_id,
           substation_id,
           latitude,
           longitude,
         } = response.data.gangs[0];
+        //alert(substation_id);
         setGangData((prevGangData) => ({
           ...prevGangData,
           latitude: latitude,
@@ -521,6 +551,7 @@ function GangList() {
           location: location,
           tools_availabe: tools_availabe,
           subStation: substation_id,
+          division: division_id,
         }));
         setOpen(true);
         setShowLoader(false);
@@ -701,7 +732,7 @@ function GangList() {
                           gangList.map((gang, index) => (
                             <tr key={gang._id}>
                               <td scope="row">{index + 1}</td>
-                              <td>{gang.gangCategory}</td>
+                              <td>{gang.gangCategoryID.categoryName}</td>
                               <td>{gang.gangName}</td>
                               <td>{gang.gangMobile}</td>
                               <td>{gang.substation}</td>
@@ -810,14 +841,34 @@ function GangList() {
             TransitionComponent={Transition}
             keepMounted
             onClose={handleClose}
-            aria-describedby="alert-dialog-slide-description"
+            fullWidth
+            maxWidth="md"
           >
             <DialogTitle>{mode === "add" ? "Add" : "Update"} Gang</DialogTitle>
             <DialogContent>
               <form onSubmit={mode === "add" ? addGang : updateGang}>
                 <div className="modal-body">
                   <div className="row g-3">
-                    <div className="col-lg-6">
+                    <div className="col-lg-4">
+                      <div>
+                        <label className="form-label">Gang Category</label>
+                        <select
+                          onChange={handleChange}
+                          value={gangData.category}
+                          name="category"
+                          className="form-control"
+                        >
+                          <option>Select category</option>
+                          {categoryList &&
+                            categoryList.map((cat) => (
+                              <option key={cat._id} value={cat._id}>
+                                {cat.categoryName}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="col-lg-4">
                       <div id="modal-id">
                         <label className="form-label">Gang Name</label>
                         <input
@@ -830,26 +881,8 @@ function GangList() {
                         />
                       </div>
                     </div>
-                    <div className="col-lg-6">
-                      <div>
-                        <label className="form-label">Gang Category</label>
-                        <select
-                          onChange={handleChange}
-                          value={gangData.category}
-                          name="category"
-                          className="form-control"
-                        >
-                          <option>Select category</option>
-                          {categoryList &&
-                            categoryList.map((cat) => (
-                              <option key={cat._id} value={cat.categoryName}>
-                                {cat.categoryName}
-                              </option>
-                            ))}
-                        </select>
-                      </div>
-                    </div>
-                    <div className="col-lg-6">
+
+                    <div className="col-lg-4">
                       <div>
                         <label className="form-label">Mobile No.</label>
                         <input
@@ -862,7 +895,27 @@ function GangList() {
                         />
                       </div>
                     </div>
-                    <div className="col-lg-6">
+                    <div className="col-lg-4">
+                      <div>
+                        <label className="form-label">Division</label>
+                        <select
+                          className="form-control"
+                          name="division"
+                          onChange={handleChange}
+                          value={gangData.division}
+                          defaultValue={""}
+                        >
+                          <option value={""}>Select</option>
+                          {divisionList &&
+                            divisionList.map((division) => (
+                              <option key={division._id} value={division._id}>
+                                {division.DIVISION_NAME}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="col-lg-4">
                       <div>
                         <label className="form-label">Sub Station</label>
                         <select
@@ -885,7 +938,7 @@ function GangList() {
                         </select>
                       </div>
                     </div>
-                    {/* <div className="col-lg-6">
+                    {/* <div className="col-lg-4">
                       <div>
                         <label className="form-label">Gang Leader Name</label>
                         <select
@@ -903,7 +956,7 @@ function GangList() {
                         </select>
                       </div>
                     </div> */}
-                    <div className="col-lg-6">
+                    <div className="col-lg-4">
                       <label className="form-label">Feeder</label>
                       <input
                         type="text"
@@ -912,9 +965,10 @@ function GangList() {
                         name="feeder"
                         value={gangData.feeder}
                         onChange={handleChange}
+                        autoComplete="off"
                       />
                     </div>
-                    <div className="col-lg-6">
+                    <div className="col-lg-4">
                       <label className="form-label">Location</label>
                       <input
                         type="text"
@@ -923,10 +977,11 @@ function GangList() {
                         name="location"
                         value={gangData.location}
                         onChange={handleChange}
+                        autoComplete="off"
                       />
                     </div>
 
-                    <div className="col-lg-6">
+                    <div className="col-lg-4">
                       <label className="form-label">Latitude</label>
                       <input
                         type="text"
@@ -935,10 +990,9 @@ function GangList() {
                         name="latitude"
                         value={gangData.latitude}
                         onChange={handleChange}
-                        readOnly
                       />
                     </div>
-                    <div className="col-lg-6">
+                    <div className="col-lg-4">
                       <label className="form-label">Longitude</label>
                       <input
                         type="text"
@@ -947,10 +1001,9 @@ function GangList() {
                         name="longitude"
                         value={gangData.longitude}
                         onChange={handleChange}
-                        readOnly
                       />
                     </div>
-                    <div className="col-lg-6">
+                    <div className="col-lg-4">
                       <label className="form-label">&nbsp;</label>
                       <button
                         className="btn btn-primary w-100"
@@ -960,7 +1013,7 @@ function GangList() {
                         Pick Loaction
                       </button>
                     </div>
-                    <div className="col-lg-6">
+                    <div className="col-lg-4">
                       <label className="form-label">Is tools available?</label>
                       <div>
                         <div className="form-check form-check-inline">

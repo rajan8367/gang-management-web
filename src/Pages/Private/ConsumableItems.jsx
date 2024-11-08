@@ -26,6 +26,7 @@ function ConsumableItem() {
     id: "",
     name: "",
     description: "",
+    unit: "",
   });
   useEffect(() => {
     if (token !== "") {
@@ -43,6 +44,7 @@ function ConsumableItem() {
       id: "",
       name: "",
       description: "",
+      unit: "",
     }));
   };
 
@@ -118,6 +120,15 @@ function ConsumableItem() {
       });
       return;
     }
+    if (itemData.unit === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Enter Item unit",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
     if (itemData.description === "") {
       Swal.fire({
         title: "Error!",
@@ -131,6 +142,7 @@ function ConsumableItem() {
     const data = {
       productName: itemData.name,
       productDescription: itemData.description,
+      productUnit: itemData.unit,
     };
     axios
       .post(`${apiUrl}add-inventory`, data, {
@@ -152,6 +164,7 @@ function ConsumableItem() {
           id: "",
           name: "",
           description: "",
+          unit: "",
         });
         setOpen(false);
         fetchItems();
@@ -182,11 +195,21 @@ function ConsumableItem() {
       });
       return;
     }
+    if (itemData.unit === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Enter Item unit",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
     setShowLoader(true);
     const data = {
       id: itemData.id,
       productName: itemData.name,
       productDescription: itemData.description,
+      productUnit: itemData.unit,
     };
     axios
       .put(`${apiUrl}edit-inventory`, data, {
@@ -209,6 +232,7 @@ function ConsumableItem() {
           id: "",
           name: "",
           description: "",
+          unit: "",
         });
         fetchItems();
       })
@@ -272,6 +296,7 @@ function ConsumableItem() {
                           </th>
                           <th>Name</th>
                           <th>Description</th>
+                          <th>Unit</th>
                           <th style={{ width: 120 }} align="center">
                             Action
                           </th>
@@ -285,6 +310,7 @@ function ConsumableItem() {
                                 <td>{index + 1}</td>
                                 <td>{item.productName}</td>
                                 <td>{item.productDescription}</td>
+                                <td>{item.productUnit}</td>
                                 <td align="center">
                                   <button
                                     className="btn btn-primary btn-sm"
@@ -294,6 +320,7 @@ function ConsumableItem() {
                                         id: item._id,
                                         name: item.productName,
                                         description: item.productDescription,
+                                        unit: item.productUnit,
                                       });
                                       handleClickOpen();
                                     }}
@@ -360,7 +387,7 @@ function ConsumableItem() {
                 <div className="modal-body">
                   <div className="row g-3">
                     <div className="col-lg-12">
-                      <div id="modal-id">
+                      <div>
                         <label className="form-label">Name</label>
                         <input
                           type="text"
@@ -372,7 +399,17 @@ function ConsumableItem() {
                         />
                       </div>
                     </div>
-
+                    <div className="col-lg-12">
+                      <label className="form-label">Unit</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Unit"
+                        name="unit"
+                        value={itemData.unit}
+                        onChange={handleChange}
+                      />
+                    </div>
                     <div className="col-lg-12">
                       <div>
                         <label className="form-label">Description</label>

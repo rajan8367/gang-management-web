@@ -172,10 +172,11 @@ function Login() {
                               }
                             >
                               <option value="">Select User Type</option>
-                              <option value="division">Division</option>
-                              <option value="circle">Circle</option>
+                              {/* <option value="division">Division</option>
+                              <option value="circle">Circle</option> */}
                               <option value="admin">Admin</option>
                               <option value="dispatcher">Dispatcher</option>
+                              <option value="user">User</option>
                             </select>
                           </div>
                           <div className="mb-3">
@@ -196,9 +197,9 @@ function Login() {
 
                           <div className="mb-3">
                             <div className="float-end">
-                              <Link to={"/"} className="text-muted">
+                              {/* <Link to={"/"} className="text-muted">
                                 Forgot password?
-                              </Link>
+                              </Link> */}
                             </div>
                             <label className="form-label">Password</label>
                             <div className="position-relative auth-pass-inputgroup mb-3">
@@ -239,15 +240,6 @@ function Login() {
                               <label className="form-check-label">
                                 Remember me
                               </label>
-                            </div>
-
-                            <div>
-                              <Link
-                                to={"/dispatcher-register"}
-                                className="text-muted"
-                              >
-                                Dispatcher Registration
-                              </Link>
                             </div>
                           </div>
 

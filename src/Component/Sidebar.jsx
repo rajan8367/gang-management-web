@@ -80,21 +80,23 @@ function Sidebar() {
               </Link>
               
             </li> */}
-            {userType !== "admin" && userType !== "dispatcher" && (
-              <li className="nav-item">
-                <Link
-                  to="/gang-list"
-                  className={`${
-                    pathname === "/gang-list"
-                      ? "nav-link menu-link active"
-                      : "nav-link menu-link "
-                  } `}
-                >
-                  <i className="ri-apps-2-line"></i>{" "}
-                  <span data-key="t-apps">Gang Management</span>
-                </Link>
-              </li>
-            )}
+            {userType !== "admin" &&
+              userType !== "dispatcher" &&
+              userType !== "user" && (
+                <li className="nav-item">
+                  <Link
+                    to="/gang-list"
+                    className={`${
+                      pathname === "/gang-list"
+                        ? "nav-link menu-link active"
+                        : "nav-link menu-link "
+                    } `}
+                  >
+                    <i className="ri-apps-2-line"></i>{" "}
+                    <span data-key="t-apps">Gang Management</span>
+                  </Link>
+                </li>
+              )}
             {userType === "admin" && (
               <>
                 <li className="nav-item">
@@ -152,6 +154,20 @@ function Sidebar() {
 
                 <li className="nav-item">
                   <Link
+                    to="/user-list"
+                    className={`${
+                      pathname === "/user-list"
+                        ? "nav-link menu-link active"
+                        : "nav-link menu-link "
+                    } `}
+                  >
+                    <i className="ri-user-line"></i>
+                    <span data-key="t-apps">Users</span>
+                  </Link>
+                </li>
+
+                <li className="nav-item">
+                  <Link
                     to="/feedback-master"
                     className={`${
                       pathname === "/feedback-master"
@@ -163,7 +179,7 @@ function Sidebar() {
                     <span data-key="t-apps">Feedback Master</span>
                   </Link>
                 </li>
-                <li className="nav-item">
+                {/* <li className="nav-item">
                   <Link
                     to="/role-master"
                     className={`${
@@ -187,6 +203,19 @@ function Sidebar() {
                   >
                     <i className="ri-timer-line"></i>
                     <span data-key="t-apps">Escalation Matrix</span>
+                  </Link>
+                </li> */}
+                <li className="nav-item">
+                  <Link
+                    to="/gang-list"
+                    className={`${
+                      pathname === "/gang-list"
+                        ? "nav-link menu-link active"
+                        : "nav-link menu-link "
+                    } `}
+                  >
+                    <i className="ri-apps-2-line"></i>{" "}
+                    <span data-key="t-apps">Gang Management</span>
                   </Link>
                 </li>
               </>

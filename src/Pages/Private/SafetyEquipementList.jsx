@@ -22,18 +22,40 @@ function SafetyEquipmentList() {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState("add");
   const [checklist, setChecklist] = useState(null);
+  const [gangCat, setGangCat] = useState(null);
   const [equipmentData, setEquipmentData] = useState({
     equipmentID: "",
     equipmentName: "",
     equipmentDescription: "",
+    gangCategory: "",
   });
 
   useEffect(() => {
     if (token !== "") {
       fetchSafetyChecklist();
+      fetchGangCategory();
     }
   }, [token]);
-
+  const fetchGangCategory = () => {
+    setShowLoader(true);
+    const data = {};
+    axios
+      .post(`${apiUrl}list-gangCategory`, data, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        console.log("Response:", response);
+        setGangCat(response.data?.data);
+        setShowLoader(false);
+      })
+      .catch((error) => {
+        setShowLoader(false);
+        console.log(error);
+      });
+  };
   const handleClickOpen = () => {
     setOpen(true);
   };
@@ -114,6 +136,15 @@ function SafetyEquipmentList() {
   };
   const addEquipment = (e) => {
     e.preventDefault();
+    if (equipmentData.gangCategory === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Select Gang Category",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
     if (equipmentData.equipmentName === "") {
       Swal.fire({
         title: "Error!",
@@ -136,6 +167,7 @@ function SafetyEquipmentList() {
     const data = {
       equipmentName: equipmentData.equipmentName,
       equipmentDescription: equipmentData.equipmentDescription,
+      gangCategory: equipmentData.gangCategory,
     };
     axios
       .post(`${apiUrl}add-saftyEquipment`, data, {
@@ -169,6 +201,15 @@ function SafetyEquipmentList() {
 
   const updateEquipment = (e) => {
     e.preventDefault();
+    if (equipmentData.gangCategory === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Select Gang Category",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
     if (equipmentData.equipmentName === "") {
       Swal.fire({
         title: "Error!",
@@ -192,6 +233,7 @@ function SafetyEquipmentList() {
       equipmentName: equipmentData.equipmentName,
       equipmentDescription: equipmentData.equipmentDescription,
       id: equipmentData.equipmentID,
+      gangCategory: equipmentData.gangCategory,
     };
     axios
       .put(`${apiUrl}edit-saftyEquipment`, data, {
@@ -275,6 +317,7 @@ function SafetyEquipmentList() {
                           <th scope="col" style={{ width: "40px" }}>
                             S.No.
                           </th>
+                          <th>Gang Category</th>
                           <th>Name</th>
                           <th>Description</th>
                           <th style={{ width: 120 }} align="center">
@@ -288,6 +331,7 @@ function SafetyEquipmentList() {
                             checklist.map((equipment, index) => (
                               <tr key={equipment._id}>
                                 <td>{index + 1}</td>
+                                <td>{equipment.gangCategory?.categoryName}</td>
                                 <td>{equipment.equipmentName}</td>
                                 <td>{equipment.equipmentDescription}</td>
                                 <td align="center">
@@ -367,7 +411,26 @@ function SafetyEquipmentList() {
                 <div className="modal-body">
                   <div className="row g-3">
                     <div className="col-lg-12">
-                      <div id="modal-id">
+                      <div>
+                        <label className="form-label">Gang Category</label>
+                        <select
+                          className="form-control"
+                          name="gangCategory"
+                          value={equipmentData.gangCategory}
+                          onChange={handleChange}
+                        >
+                          <option value={""}>Select</option>
+                          {gangCat &&
+                            gangCat.map((gang) => (
+                              <option value={gang._id} key={gang._id}>
+                                {gang.categoryName}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="col-lg-12">
+                      <div>
                         <label className="form-label">Name</label>
                         <input
                           type="text"

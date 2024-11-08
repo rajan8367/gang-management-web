@@ -11,6 +11,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import Slide from "@mui/material/Slide";
 import totalCount from "./../../assets/images/report.png";
 import openCount from "./../../assets/images/maintenance.png";
+import timerCount from "./../../assets/images/timer.png";
 import inProgressCount from "./../../assets/images/rpa.png";
 import resolved from "./../../assets/images/resolved.png";
 import assignment from "./../../assets/images/assignment.png";
@@ -33,6 +34,7 @@ const complaintStatus = [
 function Dashboard() {
   const { user, token, setCustomMsg, userType } = useUserContext();
   const navigate = useNavigate();
+  console.log(userType);
   const [greet, setGreet] = useState("");
   const [complaint, setComplaint] = useState(null);
   const [count, setCount] = useState(null);
@@ -122,7 +124,7 @@ function Dashboard() {
     setOpen(false);
   };
 
-  const fetchGang = (id) => {
+  /* const fetchGang = (id) => {
     setShowLoader(true);
     const data = {
       complaintID: id,
@@ -148,16 +150,16 @@ function Dashboard() {
         setShowLoader(false);
         console.log(error);
       });
-  };
+  }; */
 
-  const assignComplaint = (gangId) => {
+  const fetchGang = (id) => {
     setShowLoader(true);
     const data = {
-      complain_no: complaintId,
-      gang_id: gangId,
+      search: "",
+      gangID: "",
     };
     axios
-      .put(`${apiUrl}assign-complain`, data, {
+      .post(`${apiUrl}list-gangCategory`, data, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -165,20 +167,64 @@ function Dashboard() {
       })
       .then((response) => {
         console.log("Response:", response);
-        setOpen(false);
-        setCustomMsg((prevMsg) => ({
-          ...prevMsg,
-          isVisible: true,
-          text: response?.data?.message,
-          type: "success",
-        }));
-        fetchComplaint();
+        setGangList(response?.data?.data);
         setShowLoader(false);
       })
       .catch((error) => {
         setShowLoader(false);
         console.log(error);
       });
+  };
+
+  const assignComplaint = async (categoryName) => {
+    setShowLoader(true);
+
+    const data = {
+      complaintId,
+      gangCategory: categoryName,
+    };
+
+    try {
+      const response = await axios.post(
+        `${apiUrl}assign-complaint-from-dispatcher`,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("Response:", response);
+
+      // Set success message
+      setCustomMsg((prevMsg) => ({
+        ...prevMsg,
+        isVisible: true,
+        text: response?.data?.message || "Complaint assigned successfully!",
+        type: "success",
+      }));
+
+      // Close the dialog
+      setOpen(false);
+
+      // Refresh the complaint data
+      fetchComplaint();
+    } catch (error) {
+      console.error("Error:", error);
+
+      // Set error message
+      setCustomMsg((prevMsg) => ({
+        ...prevMsg,
+        isVisible: true,
+        text: error?.response?.data?.message || "Failed to assign complaint",
+        type: "error",
+      }));
+    } finally {
+      // Hide the loader
+      setShowLoader(false);
+    }
   };
 
   const reAssignComplaint = (gangId) => {
@@ -299,12 +345,12 @@ function Dashboard() {
                   <div className="col-12">
                     <div className="d-flex align-items-lg-center flex-lg-row flex-column">
                       <div className="flex-grow-1">
-                        <h4
+                        {/* <h4
                           className="fs-16 mb-1"
                           style={{ textTransform: "capitalize" }}
                         >
                           {greet}, {user?.DIVISION_NAME}!
-                        </h4>
+                        </h4> */}
                       </div>
                       <div className="mt-3 mt-lg-0">
                         <form action="#">
@@ -320,23 +366,26 @@ function Dashboard() {
                                 isClearable={true}
                                 placeholderText="Select from to date"
                                 className="form-control shadow"
+                                dateFormat="dd-MM-yyyy"
                               />
                             </div>
-                            <div className="col-sm-auto">
-                              <select
-                                className="form-select shadow"
-                                onChange={handleChange}
-                                name="complaintStatus"
-                                value={filterData.complaintStatus}
-                              >
-                                <option value="">All Complaints</option>
-                                {complaintStatus.map((status) => (
-                                  <option key={status} value={status}>
-                                    {status}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
+                            {userType !== "dispatcher" && (
+                              <div className="col-sm-auto">
+                                <select
+                                  className="form-select shadow"
+                                  onChange={handleChange}
+                                  name="complaintStatus"
+                                  value={filterData.complaintStatus}
+                                >
+                                  <option value="">All Complaints</option>
+                                  {complaintStatus.map((status) => (
+                                    <option key={status} value={status}>
+                                      {status}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            )}
                             <div className="col-sm-auto">
                               <input
                                 type="text"
@@ -364,267 +413,434 @@ function Dashboard() {
                 </div>
 
                 <div className="row">
-                  <div
-                    className="col-xl-2 col-md-6 cursor-pointer"
-                    onClick={() =>
-                      setFilterData((prevData) => ({
-                        ...prevData,
-                        complaintStatus: "",
-                      }))
-                    }
-                  >
-                    <div
-                      className={`card card-animate ${
-                        filterData.complaintStatus === "" &&
-                        "border border-success"
-                      }`}
-                    >
-                      <div className="card-body">
-                        <div className="d-flex align-items-center">
-                          <div className="flex-grow-1 overflow-hidden">
-                            <p className="text-uppercase fw-medium text-muted text-truncate mb-0">
-                              {" "}
-                              Total Complaints
-                            </p>
-                          </div>
-                        </div>
-                        <div className="d-flex align-items-end justify-content-between mt-4">
-                          <div>
-                            <h4 className="fs-22 fw-semibold ff-secondary">
-                              <span className="counter-value" data-target="559">
-                                {count &&
-                                  Object.values(count).reduce(
-                                    (acc, value) => acc + value,
-                                    0
-                                  )}
-                              </span>{" "}
-                            </h4>
-                          </div>
-                          <div className="avatar-sm flex-shrink-0">
-                            <span className="avatar-title bg-soft-success rounded fs-3">
-                              <img src={totalCount} className="img-fluid" />
-                            </span>
+                  {userType !== "dispatcher" ? (
+                    <>
+                      <div
+                        className="col-xl-2 col-md-6 cursor-pointer"
+                        onClick={() =>
+                          setFilterData((prevData) => ({
+                            ...prevData,
+                            complaintStatus: "",
+                          }))
+                        }
+                      >
+                        <div
+                          className={`card card-animate ${
+                            filterData.complaintStatus === "" &&
+                            "border border-success"
+                          }`}
+                        >
+                          <div className="card-body">
+                            <div className="d-flex align-items-center">
+                              <div className="flex-grow-1 overflow-hidden">
+                                <p className="text-uppercase fw-medium text-muted text-truncate mb-0">
+                                  {" "}
+                                  Total Complaints
+                                </p>
+                              </div>
+                            </div>
+                            <div className="d-flex align-items-end justify-content-between mt-4">
+                              <div>
+                                <h4 className="fs-22 fw-semibold ff-secondary">
+                                  <span
+                                    className="counter-value"
+                                    data-target="559"
+                                  >
+                                    {count &&
+                                      Object.values(count).reduce(
+                                        (acc, value) => acc + value,
+                                        0
+                                      )}
+                                  </span>{" "}
+                                </h4>
+                              </div>
+                              <div className="avatar-sm flex-shrink-0">
+                                <span className="avatar-title bg-soft-success rounded fs-3">
+                                  <img src={totalCount} className="img-fluid" />
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
 
-                  <div
-                    className="col-xl-2 col-md-6"
-                    onClick={() =>
-                      setFilterData((prevData) => ({
-                        ...prevData,
-                        complaintStatus: "Open",
-                      }))
-                    }
-                  >
-                    <div
-                      className={`card card-animate ${
-                        filterData.complaintStatus === "Open" &&
-                        "border border-success"
-                      }`}
-                    >
-                      <div className="card-body">
-                        <div className="d-flex align-items-center">
-                          <div className="flex-grow-1 overflow-hidden">
-                            <p className="text-uppercase fw-medium text-muted text-truncate mb-0">
-                              Open
-                            </p>
-                          </div>
-                          <div className="flex-shrink-0">
-                            <h5 className="text-danger fs-14 mb-0"></h5>
-                          </div>
-                        </div>
-                        <div className="d-flex align-items-end justify-content-between mt-4">
-                          <div>
-                            <h4 className="fs-22 fw-semibold ff-secondary">
-                              <span className="counter-value" data-target="368">
-                                {count?.open}
-                              </span>
-                            </h4>
-                          </div>
-                          <div className="avatar-sm flex-shrink-0">
-                            <span className="avatar-title bg-soft-info rounded fs-3">
-                              <img src={openCount} className="img-fluid" />
-                            </span>
+                      <div
+                        className="col-xl-2 col-md-6"
+                        onClick={() =>
+                          setFilterData((prevData) => ({
+                            ...prevData,
+                            complaintStatus: "Open",
+                          }))
+                        }
+                      >
+                        <div
+                          className={`card card-animate ${
+                            filterData.complaintStatus === "Open" &&
+                            "border border-success"
+                          }`}
+                        >
+                          <div className="card-body">
+                            <div className="d-flex align-items-center">
+                              <div className="flex-grow-1 overflow-hidden">
+                                <p className="text-uppercase fw-medium text-muted text-truncate mb-0">
+                                  Open
+                                </p>
+                              </div>
+                              <div className="flex-shrink-0">
+                                <h5 className="text-danger fs-14 mb-0"></h5>
+                              </div>
+                            </div>
+                            <div className="d-flex align-items-end justify-content-between mt-4">
+                              <div>
+                                <h4 className="fs-22 fw-semibold ff-secondary">
+                                  <span
+                                    className="counter-value"
+                                    data-target="368"
+                                  >
+                                    {count?.open}
+                                  </span>
+                                </h4>
+                              </div>
+                              <div className="avatar-sm flex-shrink-0">
+                                <span className="avatar-title bg-soft-info rounded fs-3">
+                                  <img src={openCount} className="img-fluid" />
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
 
-                  <div
-                    className={`col-xl-2 col-md-6 cursor-pointer`}
-                    onClick={() =>
-                      setFilterData((prevData) => ({
-                        ...prevData,
-                        complaintStatus: "Assigned",
-                      }))
-                    }
-                  >
-                    <div
-                      className={`card card-animate ${
-                        filterData.complaintStatus === "Assigned" &&
-                        "border border-success"
-                      }`}
-                    >
-                      <div className="card-body">
-                        <div className="d-flex align-items-center">
-                          <div className="flex-grow-1 overflow-hidden">
-                            <p className="text-uppercase fw-medium text-muted text-truncate mb-0">
-                              {" "}
-                              Assigned
-                            </p>
-                          </div>
-                        </div>
-                        <div className="d-flex align-items-end justify-content-between mt-4">
-                          <div>
-                            <h4 className="fs-22 fw-semibold ff-secondary">
-                              <span className="counter-value" data-target="165">
-                                {count?.assigned}
-                              </span>
-                            </h4>
-                          </div>
-                          <div className="avatar-sm flex-shrink-0">
-                            <span className="avatar-title bg-soft-primary rounded fs-3">
-                              <img src={assignment} className="img-fluid" />
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div
-                    className="col-xl-2 col-md-6 cursor-pointer"
-                    onClick={() =>
-                      setFilterData((prevData) => ({
-                        ...prevData,
-                        complaintStatus: "InProgress",
-                      }))
-                    }
-                  >
-                    <div
-                      className={`card card-animate ${
-                        filterData.complaintStatus === "InProgress" &&
-                        "border border-success"
-                      }`}
-                    >
-                      <div className="card-body">
-                        <div className="d-flex align-items-center">
-                          <div className="flex-grow-1 overflow-hidden">
-                            <p className="text-uppercase fw-medium text-muted text-truncate mb-0">
-                              In Progress
-                            </p>
-                          </div>
-                          <div className="flex-shrink-0">
-                            <h5 className="text-success fs-14 mb-0"></h5>
-                          </div>
-                        </div>
-                        <div className="d-flex align-items-end justify-content-between mt-4">
-                          <div>
-                            <h4 className="fs-22 fw-semibold ff-secondary">
-                              <span className="counter-value" data-target="66">
-                                {count?.inProgress}
-                              </span>{" "}
-                            </h4>
-                          </div>
-                          <div className="avatar-sm flex-shrink-0">
-                            <span className="avatar-title bg-soft-warning rounded fs-3">
-                              <img
-                                src={inProgressCount}
-                                className="img-fluid"
-                              />
-                            </span>
+                      <div
+                        className={`col-xl-2 col-md-6 cursor-pointer`}
+                        onClick={() =>
+                          setFilterData((prevData) => ({
+                            ...prevData,
+                            complaintStatus: "Assigned",
+                          }))
+                        }
+                      >
+                        <div
+                          className={`card card-animate ${
+                            filterData.complaintStatus === "Assigned" &&
+                            "border border-success"
+                          }`}
+                        >
+                          <div className="card-body">
+                            <div className="d-flex align-items-center">
+                              <div className="flex-grow-1 overflow-hidden">
+                                <p className="text-uppercase fw-medium text-muted text-truncate mb-0">
+                                  {" "}
+                                  Assigned
+                                </p>
+                              </div>
+                            </div>
+                            <div className="d-flex align-items-end justify-content-between mt-4">
+                              <div>
+                                <h4 className="fs-22 fw-semibold ff-secondary">
+                                  <span
+                                    className="counter-value"
+                                    data-target="165"
+                                  >
+                                    {count?.assigned}
+                                  </span>
+                                </h4>
+                              </div>
+                              <div className="avatar-sm flex-shrink-0">
+                                <span className="avatar-title bg-soft-primary rounded fs-3">
+                                  <img src={assignment} className="img-fluid" />
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
 
-                  <div
-                    className={`col-xl-2 col-md-6 cursor-pointer`}
-                    onClick={() =>
-                      setFilterData((prevData) => ({
-                        ...prevData,
-                        complaintStatus: "OnHold",
-                      }))
-                    }
-                  >
-                    <div
-                      className={`card card-animate ${
-                        filterData.complaintStatus === "OnHold" &&
-                        "border border-success"
-                      }`}
-                    >
-                      <div className="card-body">
-                        <div className="d-flex align-items-center">
-                          <div className="flex-grow-1 overflow-hidden">
-                            <p className="text-uppercase fw-medium text-muted text-truncate mb-0">
-                              {" "}
-                              On Hold
-                            </p>
-                          </div>
-                        </div>
-                        <div className="d-flex align-items-end justify-content-between mt-4">
-                          <div>
-                            <h4 className="fs-22 fw-semibold ff-secondary">
-                              <span className="counter-value" data-target="165">
-                                {count?.onHold}
-                              </span>
-                            </h4>
-                          </div>
-                          <div className="avatar-sm flex-shrink-0">
-                            <span className="avatar-title bg-soft-primary rounded fs-3">
-                              <img src={hold} className="img-fluid" />
-                            </span>
+                      <div
+                        className="col-xl-2 col-md-6 cursor-pointer"
+                        onClick={() =>
+                          setFilterData((prevData) => ({
+                            ...prevData,
+                            complaintStatus: "InProgress",
+                          }))
+                        }
+                      >
+                        <div
+                          className={`card card-animate ${
+                            filterData.complaintStatus === "InProgress" &&
+                            "border border-success"
+                          }`}
+                        >
+                          <div className="card-body">
+                            <div className="d-flex align-items-center">
+                              <div className="flex-grow-1 overflow-hidden">
+                                <p className="text-uppercase fw-medium text-muted text-truncate mb-0">
+                                  In Progress
+                                </p>
+                              </div>
+                              <div className="flex-shrink-0">
+                                <h5 className="text-success fs-14 mb-0"></h5>
+                              </div>
+                            </div>
+                            <div className="d-flex align-items-end justify-content-between mt-4">
+                              <div>
+                                <h4 className="fs-22 fw-semibold ff-secondary">
+                                  <span
+                                    className="counter-value"
+                                    data-target="66"
+                                  >
+                                    {count?.inProgress}
+                                  </span>{" "}
+                                </h4>
+                              </div>
+                              <div className="avatar-sm flex-shrink-0">
+                                <span className="avatar-title bg-soft-warning rounded fs-3">
+                                  <img
+                                    src={inProgressCount}
+                                    className="img-fluid"
+                                  />
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
 
-                  <div
-                    className={`col-xl-2 col-md-6 cursor-pointer`}
-                    onClick={() =>
-                      setFilterData((prevData) => ({
-                        ...prevData,
-                        complaintStatus: "Resolved",
-                      }))
-                    }
-                  >
-                    <div
-                      className={`card card-animate ${
-                        filterData.complaintStatus === "Resolved" &&
-                        "border border-success"
-                      }`}
-                    >
-                      <div className="card-body">
-                        <div className="d-flex align-items-center">
-                          <div className="flex-grow-1 overflow-hidden">
-                            <p className="text-uppercase fw-medium text-muted text-truncate mb-0">
-                              {" "}
-                              Resolved
-                            </p>
-                          </div>
-                        </div>
-                        <div className="d-flex align-items-end justify-content-between mt-4">
-                          <div>
-                            <h4 className="fs-22 fw-semibold ff-secondary">
-                              <span className="counter-value" data-target="165">
-                                {count?.resolved}
-                              </span>
-                            </h4>
-                          </div>
-                          <div className="avatar-sm flex-shrink-0">
-                            <span className="avatar-title bg-soft-primary rounded fs-3">
-                              <img src={resolved} className="img-fluid" />
-                            </span>
+                      <div
+                        className={`col-xl-2 col-md-6 cursor-pointer`}
+                        onClick={() =>
+                          setFilterData((prevData) => ({
+                            ...prevData,
+                            complaintStatus: "OnHold",
+                          }))
+                        }
+                      >
+                        <div
+                          className={`card card-animate ${
+                            filterData.complaintStatus === "OnHold" &&
+                            "border border-success"
+                          }`}
+                        >
+                          <div className="card-body">
+                            <div className="d-flex align-items-center">
+                              <div className="flex-grow-1 overflow-hidden">
+                                <p className="text-uppercase fw-medium text-muted text-truncate mb-0">
+                                  {" "}
+                                  On Hold
+                                </p>
+                              </div>
+                            </div>
+                            <div className="d-flex align-items-end justify-content-between mt-4">
+                              <div>
+                                <h4 className="fs-22 fw-semibold ff-secondary">
+                                  <span
+                                    className="counter-value"
+                                    data-target="165"
+                                  >
+                                    {count?.onHold}
+                                  </span>
+                                </h4>
+                              </div>
+                              <div className="avatar-sm flex-shrink-0">
+                                <span className="avatar-title bg-soft-primary rounded fs-3">
+                                  <img src={hold} className="img-fluid" />
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
+
+                      <div
+                        className={`col-xl-2 col-md-6 cursor-pointer`}
+                        onClick={() =>
+                          setFilterData((prevData) => ({
+                            ...prevData,
+                            complaintStatus: "Resolved",
+                          }))
+                        }
+                      >
+                        <div
+                          className={`card card-animate ${
+                            filterData.complaintStatus === "Resolved" &&
+                            "border border-success"
+                          }`}
+                        >
+                          <div className="card-body">
+                            <div className="d-flex align-items-center">
+                              <div className="flex-grow-1 overflow-hidden">
+                                <p className="text-uppercase fw-medium text-muted text-truncate mb-0">
+                                  {" "}
+                                  Resolved
+                                </p>
+                              </div>
+                            </div>
+                            <div className="d-flex align-items-end justify-content-between mt-4">
+                              <div>
+                                <h4 className="fs-22 fw-semibold ff-secondary">
+                                  <span
+                                    className="counter-value"
+                                    data-target="165"
+                                  >
+                                    {count?.resolved}
+                                  </span>
+                                </h4>
+                              </div>
+                              <div className="avatar-sm flex-shrink-0">
+                                <span className="avatar-title bg-soft-primary rounded fs-3">
+                                  <img src={resolved} className="img-fluid" />
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div
+                        className="col-xl-3 col-md-6 cursor-pointer"
+                        onClick={() =>
+                          setFilterData((prevData) => ({
+                            ...prevData,
+                            complaintStatus: "",
+                          }))
+                        }
+                      >
+                        <div
+                          className={`card card-animate ${
+                            filterData.complaintStatus === "" &&
+                            "border border-success"
+                          }`}
+                        >
+                          <div className="card-body">
+                            <div className="d-flex align-items-center">
+                              <div className="flex-grow-1 overflow-hidden">
+                                <p className="text-uppercase fw-medium text-muted text-truncate mb-0">
+                                  {" "}
+                                  Total Complaints
+                                </p>
+                              </div>
+                            </div>
+                            <div className="d-flex align-items-end justify-content-between mt-4">
+                              <div>
+                                <h4 className="fs-22 fw-semibold ff-secondary">
+                                  <span
+                                    className="counter-value"
+                                    data-target="559"
+                                  >
+                                    {count &&
+                                      Object.values(count).reduce(
+                                        (acc, value) => acc + value,
+                                        0
+                                      )}
+                                  </span>{" "}
+                                </h4>
+                              </div>
+                              <div className="avatar-sm flex-shrink-0">
+                                <span className="avatar-title bg-soft-success rounded fs-3">
+                                  <img src={totalCount} className="img-fluid" />
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div
+                        className="col-xl-3 col-md-6"
+                        onClick={() =>
+                          setFilterData((prevData) => ({
+                            ...prevData,
+                            complaintStatus: "Open",
+                          }))
+                        }
+                      >
+                        <div
+                          className={`card card-animate ${
+                            filterData.complaintStatus === "Open" &&
+                            "border border-success"
+                          }`}
+                        >
+                          <div className="card-body">
+                            <div className="d-flex align-items-center">
+                              <div className="flex-grow-1 overflow-hidden">
+                                <p className="text-uppercase fw-medium text-muted text-truncate mb-0">
+                                  Open
+                                </p>
+                              </div>
+                              <div className="flex-shrink-0">
+                                <h5 className="text-danger fs-14 mb-0"></h5>
+                              </div>
+                            </div>
+                            <div className="d-flex align-items-end justify-content-between mt-4">
+                              <div>
+                                <h4 className="fs-22 fw-semibold ff-secondary">
+                                  <span
+                                    className="counter-value"
+                                    data-target="368"
+                                  >
+                                    {count?.open}
+                                  </span>
+                                </h4>
+                              </div>
+                              <div className="avatar-sm flex-shrink-0">
+                                <span className="avatar-title bg-soft-info rounded fs-3">
+                                  <img src={openCount} className="img-fluid" />
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div
+                        className="col-xl-3 col-md-6"
+                        onClick={() =>
+                          setFilterData((prevData) => ({
+                            ...prevData,
+                            complaintStatus: "Esclate",
+                          }))
+                        }
+                      >
+                        <div
+                          className={`card card-animate ${
+                            filterData.complaintStatus === "Esclate" &&
+                            "border border-success"
+                          }`}
+                        >
+                          <div className="card-body">
+                            <div className="d-flex align-items-center">
+                              <div className="flex-grow-1 overflow-hidden">
+                                <p className="text-uppercase fw-medium text-muted text-truncate mb-0">
+                                  Escalate
+                                </p>
+                              </div>
+                              <div className="flex-shrink-0">
+                                <h5 className="text-danger fs-14 mb-0"></h5>
+                              </div>
+                            </div>
+                            <div className="d-flex align-items-end justify-content-between mt-4">
+                              <div>
+                                <h4 className="fs-22 fw-semibold ff-secondary">
+                                  <span
+                                    className="counter-value"
+                                    data-target="368"
+                                  >
+                                    {count?.esclate}
+                                  </span>
+                                </h4>
+                              </div>
+                              <div className="avatar-sm flex-shrink-0">
+                                <span className="avatar-title bg-soft-primary rounded fs-3">
+                                  <img src={timerCount} className="img-fluid" />
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <div className="row">
@@ -685,12 +901,15 @@ function Dashboard() {
                               <th>Consumer Address</th>
                               <th>Date</th>
                               <th>Status</th>
-                              <th>Assigned To</th>
-                              {userType !== "dispatcher" && (
+                              {userType === "dispatcher" && <th>Remark</th>}
+                              {userType !== "dispatcher" ? (
                                 <>
+                                  <th>Gang</th>
                                   <th>Forward To Dispatcher</th>
                                   <th>Re Assign</th>
                                 </>
+                              ) : (
+                                <th>Assign</th>
                               )}
                               <th>View</th>
                             </tr>
@@ -709,8 +928,20 @@ function Dashboard() {
                                     {formatDate(complaint.registrationDate)}
                                   </td>
                                   <td>{complaint.complaintStatus}</td>
+
+                                  {userType === "dispatcher" && (
+                                    <td>
+                                      {complaint?.staffRemarks.length > 0 &&
+                                        complaint?.staffRemarks[
+                                          complaint?.staffRemarks.length - 1
+                                        ].remark}
+                                      {complaint.complaintStatus === "Open" &&
+                                        complaint?.remarks}
+                                    </td>
+                                  )}
                                   <td>
-                                    {complaint.complaintStatus === "Open" ? (
+                                    {complaint.complaintStatus === "Open" ||
+                                    complaint.complaintStatus === "Esclate" ? (
                                       <button
                                         className="btn btn-primary"
                                         onClick={() => {
@@ -736,7 +967,9 @@ function Dashboard() {
                                     <td align="center">
                                       {complaint.fwdToDispatcher == 0 &&
                                         complaint.complaintStatus !==
-                                          "InProgress" && (
+                                          "InProgress" &&
+                                        complaint.complaintStatus !==
+                                          "Resolved" && (
                                           <button
                                             className="btn btn-primary"
                                             onClick={() => {
@@ -802,9 +1035,10 @@ function Dashboard() {
         TransitionComponent={Transition}
         keepMounted
         onClose={handleClose}
-        maxWidth="lg"
+        fullWidth
+        maxWidth="md"
       >
-        <DialogTitle>Gang List</DialogTitle>
+        <DialogTitle>Gang Category</DialogTitle>
         <DialogContent>
           <div className="table-responsive table-card mb-4">
             <table className="table align-middle table-nowrap mb-0">
@@ -813,11 +1047,8 @@ function Dashboard() {
                   <th scope="col" style={{ width: "40px" }}>
                     S.No.
                   </th>
-                  <th>Gang Name</th>
-                  <th>Gang Mobile</th>
-                  {/* <th>Gang Leader Name</th> */}
-                  <th>Sub Station</th>
-                  <th>Feeder</th>
+                  <th>Gang Category</th>
+
                   <th>Action</th>
                 </tr>
               </thead>
@@ -827,16 +1058,12 @@ function Dashboard() {
                   gangList.map((gang, index) => (
                     <tr key={gang._id}>
                       <td scope="row">{index + 1}</td>
-                      <td>{gang.gangName}</td>
-                      <td>{gang.gangMobile}</td>
-                      {/* <td>{gang.gangLeaderName}</td> */}
-                      <td>{gang.substation}</td>
-                      <td>{gang.feeder}</td>
+                      <td>{gang.categoryName}</td>
                       <td>
                         {assignType === "assign" ? (
                           <button
                             className="btn btn-primary"
-                            onClick={() => assignComplaint(gang._id)}
+                            onClick={() => assignComplaint(gang.categoryName)}
                             disabled={showLoader}
                           >
                             Assign Complaint
@@ -844,7 +1071,7 @@ function Dashboard() {
                         ) : assignType === "reAssign" ? (
                           <button
                             className="btn btn-success"
-                            onClick={() => reAssignComplaint(gang._id)}
+                            onClick={() => assignComplaint(gang.categoryName)}
                             disabled={showLoader}
                           >
                             Re Assign Complaint

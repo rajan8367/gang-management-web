@@ -25,6 +25,7 @@ function GangCategoryList() {
   const [categoryData, setCategoryData] = useState({
     id: "",
     name: "",
+    description: "",
   });
 
   useEffect(() => {
@@ -42,6 +43,7 @@ function GangCategoryList() {
       ...prevCategoryData,
       id: "",
       name: "",
+      description: "",
     }));
   };
   const fetchGangCategory = () => {
@@ -115,9 +117,19 @@ function GangCategoryList() {
       });
       return;
     }
+    if (categoryData.description === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Enter Description",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
     setShowLoader(true);
     const data = {
       categoryName: categoryData.name,
+      description: categoryData.description,
     };
     axios
       .post(`${apiUrl}add-gangCategory`, data, {
@@ -132,6 +144,7 @@ function GangCategoryList() {
         setCategoryData({
           id: "",
           name: "",
+          description: "",
         });
         setCustomMsg((prevMsg) => ({
           ...prevMsg,
@@ -159,9 +172,19 @@ function GangCategoryList() {
       });
       return;
     }
+    if (categoryData.description === "") {
+      Swal.fire({
+        title: "Error!",
+        text: "Enter Description",
+        icon: "error",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
     setShowLoader(true);
     const data = {
       categoryName: categoryData.name,
+      description: categoryData.description,
       id: categoryData.id,
     };
 
@@ -184,6 +207,7 @@ function GangCategoryList() {
         setCategoryData({
           id: "",
           name: "",
+          description: "",
         });
         setOpen(false);
         fetchGangCategory();
@@ -246,6 +270,7 @@ function GangCategoryList() {
                             S.No.
                           </th>
                           <th>Name</th>
+                          <th>Description</th>
                           <th style={{ width: 120 }} align="center">
                             Action
                           </th>
@@ -258,6 +283,7 @@ function GangCategoryList() {
                               <tr key={category._id}>
                                 <td>{index + 1}</td>
                                 <td>{category.categoryName}</td>
+                                <td>{category.description}</td>
                                 <td align="center">
                                   <button
                                     className="btn btn-primary btn-sm"
@@ -266,6 +292,7 @@ function GangCategoryList() {
                                       setCategoryData({
                                         id: category._id,
                                         name: category.categoryName,
+                                        description: category.description,
                                       });
                                       handleClickOpen();
                                     }}
@@ -335,7 +362,7 @@ function GangCategoryList() {
                 <div className="modal-body">
                   <div className="row g-3">
                     <div className="col-lg-12">
-                      <div id="modal-id">
+                      <div>
                         <label className="form-label">Name</label>
                         <input
                           type="text"
@@ -344,6 +371,19 @@ function GangCategoryList() {
                           name="name"
                           value={categoryData.name}
                           onChange={handleChange}
+                        />
+                      </div>
+                    </div>
+                    <div className="col-lg-12">
+                      <div>
+                        <label className="form-label">Description</label>
+
+                        <textarea
+                          className="form-control"
+                          name="description"
+                          value={categoryData.description}
+                          onChange={handleChange}
+                          placeholder="Enter Category Description"
                         />
                       </div>
                     </div>

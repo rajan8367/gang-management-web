@@ -187,7 +187,7 @@ function InventoryList() {
     }
     setShowLoader(true);
     const data = {
-      item: inventoryData.name,
+      inventoryID: inventoryData.name,
       quantity: inventoryData.quantity,
       gangId: gangId,
     };
@@ -243,7 +243,7 @@ function InventoryList() {
     }
     setShowLoader(true);
     const data = {
-      item: inventoryData.name,
+      productID: inventoryData.name,
       quantity: inventoryData.quantity,
       gangId: gangId,
       inventoryId: inventoryData.id,
@@ -348,7 +348,7 @@ function InventoryList() {
                               S.No.
                             </th>
                             <th>Name</th>
-                            <th>Quantity</th>
+                            <th>Quantity (Unit)</th>
                             <th>Added</th>
                             <th style={{ width: 120 }} align="center">
                               Action
@@ -361,8 +361,11 @@ function InventoryList() {
                               inventoryList.map((item, index) => (
                                 <tr key={item._id}>
                                   <td>{index + 1}</td>
-                                  <td>{item.item}</td>
-                                  <td>{item.quantity}</td>
+                                  <td>{item.inventoryID?.productName}</td>
+                                  <td>
+                                    {item.quantity} (
+                                    {item.inventoryID?.productUnit})
+                                  </td>
                                   <td>{formatDate(item.createdAt)}</td>
                                   <td align="center">
                                     <button
@@ -371,7 +374,7 @@ function InventoryList() {
                                         setMode("edit");
                                         setInventoryData({
                                           id: item._id,
-                                          name: item.item,
+                                          name: item.inventoryID?._id,
                                           quantity: item.quantity,
                                         });
                                         handleClickOpen();
@@ -430,7 +433,7 @@ function InventoryList() {
                               S.No.
                             </th>
                             <th>Name</th>
-                            <th>Quantity</th>
+                            <th>Quantity(Unit)</th>
                             <th>Added</th>
                           </tr>
                         </thead>
@@ -440,8 +443,11 @@ function InventoryList() {
                               stockList.map((item, index) => (
                                 <tr key={item._id}>
                                   <td>{index + 1}</td>
-                                  <td>{item.item}</td>
-                                  <td>{item.currentAvailableQuantity}</td>
+                                  <td>{item.inventoryID?.productName}</td>
+                                  <td>
+                                    {item.currentAvailableQuantity} (
+                                    {item.inventoryID?.productUnit})
+                                  </td>
                                   <td>{formatDate(item.createdAt)}</td>
                                 </tr>
                               ))
@@ -476,14 +482,14 @@ function InventoryList() {
             maxWidth="sm"
           >
             <DialogTitle>
-              {mode === "add" ? "Add" : "Update"} Checklist
+              {mode === "add" ? "Add" : "Update"} Inventory
             </DialogTitle>
             <DialogContent>
               <form onSubmit={mode === "add" ? addInventory : updateInventory}>
                 <div className="modal-body">
                   <div className="row g-3">
                     <div className="col-lg-12">
-                      <div id="modal-id">
+                      <div>
                         <label className="form-label">Name</label>
                         <select
                           className="form-control"
@@ -495,7 +501,7 @@ function InventoryList() {
                           <option value={""}>Select Item</option>
                           {itemList &&
                             itemList.map((item) => (
-                              <option value={item.productName} key={item._id}>
+                              <option value={item._id} key={item._id}>
                                 {item.productName}
                               </option>
                             ))}

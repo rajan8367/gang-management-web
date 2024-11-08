@@ -16,7 +16,7 @@ const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-function Dispatchers() {
+function Users() {
   const { token, user, setCustomMsg } = useUserContext();
   const [showLoader, setShowLoader] = useState(false);
   const [open, setOpen] = useState(false);
@@ -27,12 +27,13 @@ function Dispatchers() {
     name: "",
     username: "",
     email: "",
-    role: "dispatcher",
+    role: "user",
     phone: "",
+    escalateTime: 0,
   });
   useEffect(() => {
     if (token !== "") {
-      fetchDispatcher();
+      fetchUser();
     }
   }, [token]);
   const handleClickOpen = () => {
@@ -48,15 +49,16 @@ function Dispatchers() {
       username: "",
       email: "",
       phone: "",
-      role: "dispatcher",
+      role: "user",
+      escalateTime: 0,
     }));
   };
 
-  const fetchDispatcher = () => {
+  const fetchUser = () => {
     setShowLoader(true);
     const data = {
       search: "",
-      roleBased: "dispatcher",
+      roleBased: "user",
       isAssigned: "",
     };
     axios
@@ -98,7 +100,7 @@ function Dispatchers() {
           text: response?.data?.message,
           type: "success",
         }));
-        fetchDispatcher();
+        fetchUser();
       })
       .catch((error) => {
         alert(error.message);
@@ -162,6 +164,7 @@ function Dispatchers() {
       email: dispatcherData.email,
       phone: dispatcherData.phone,
       role: dispatcherData.role,
+      esclateTime: dispatcherData.escalateTime,
     };
     axios
       .post(`${apiUrl}register`, data, {
@@ -184,11 +187,12 @@ function Dispatchers() {
           name: "",
           username: "",
           email: "",
-          role: "dispatcher",
+          role: "user",
           phone: "",
+          escalateTime: 0,
         });
         setOpen(false);
-        fetchDispatcher();
+        fetchUser();
       })
       .catch((error) => {
         setShowLoader(false);
@@ -242,6 +246,7 @@ function Dispatchers() {
       phone: dispatcherData.phone,
       role: dispatcherData.role,
       id: dispatcherData.id,
+      esclateTime: dispatcherData.escalateTime,
     };
     axios
       .put(`${apiUrl}user-update`, data, {
@@ -264,11 +269,12 @@ function Dispatchers() {
           name: "",
           username: "",
           email: "",
-          role: "dispatcher",
+          role: "user",
           phone: "",
+          escalateTime: 0,
         });
         setOpen(false);
-        fetchDispatcher();
+        fetchUser();
       })
       .catch((error) => {
         setShowLoader(false);
@@ -284,13 +290,13 @@ function Dispatchers() {
           <div className="row">
             <div className="col-12">
               <div className="page-title-box d-sm-flex align-items-center justify-content-between">
-                <h4 className="mb-sm-0">Dispatcher</h4>
+                <h4 className="mb-sm-0">Users</h4>
                 <div className="page-title-right">
                   <ol className="breadcrumb m-0">
                     <li className="breadcrumb-item">
                       <Link to={"/dashboard"}>Dashboard</Link>
                     </li>
-                    <li className="breadcrumb-item active">Dispatcher</li>
+                    <li className="breadcrumb-item active">Users</li>
                   </ol>
                 </div>
               </div>
@@ -314,7 +320,7 @@ function Dispatchers() {
                         }}
                       >
                         <i className="ri-add-line align-bottom me-1"></i> Add
-                        Dispatcher
+                        Users
                       </button>
                     </div>
                   </div>
@@ -332,7 +338,8 @@ function Dispatchers() {
                           <th>Username</th>
                           <th>Email</th>
                           <th>Phone</th>
-                          <th>Role</th>
+                          <th>Escalation Time(in Hrs.)</th>
+
                           <th style={{ width: 120 }} align="center">
                             Action
                           </th>
@@ -348,7 +355,8 @@ function Dispatchers() {
                                 <td>{dispatcher.username}</td>
                                 <td>{dispatcher.email}</td>
                                 <td>{dispatcher.phone}</td>
-                                <td>{dispatcher.role}</td>
+                                <td>{dispatcher.esclateTime}</td>
+
                                 <td align="center">
                                   <button
                                     className="btn btn-primary btn-sm"
@@ -361,6 +369,7 @@ function Dispatchers() {
                                         email: dispatcher?.email,
                                         role: dispatcher?.role,
                                         phone: dispatcher?.phone,
+                                        escalateTime: dispatcher?.esclateTime,
                                       });
                                       handleClickOpen();
                                     }}
@@ -421,9 +430,7 @@ function Dispatchers() {
             onClose={handleClose}
             aria-describedby="alert-dialog-slide-description"
           >
-            <DialogTitle>
-              {mode === "add" ? "Add" : "Update"} Dispatcher
-            </DialogTitle>
+            <DialogTitle>{mode === "add" ? "Add" : "Update"} User</DialogTitle>
             <DialogContent>
               <form
                 onSubmit={mode === "add" ? addDispatcher : updateDispatcher}
@@ -476,6 +483,20 @@ function Dispatchers() {
                         onChange={handleChange}
                       />
                     </div>
+
+                    <div className="col-lg-6">
+                      <label className="form-label">
+                        Complaint Escalation Time (in Hrs.)
+                      </label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        placeholder="Time in Hrs."
+                        name="escalateTime"
+                        value={dispatcherData?.escalateTime}
+                        onChange={handleChange}
+                      />
+                    </div>
                   </div>
                 </div>
                 <div className="modal-footer">
@@ -492,7 +513,7 @@ function Dispatchers() {
                       disabled={showLoader}
                       className="btn btn-success"
                     >
-                      {mode === "add" ? "Add" : "Update"} Dispatcher
+                      {mode === "add" ? "Add" : "Update"} User
                     </button>
                   </div>
                 </div>
@@ -504,4 +525,4 @@ function Dispatchers() {
     </Layout>
   );
 }
-export default Dispatchers;
+export default Users;

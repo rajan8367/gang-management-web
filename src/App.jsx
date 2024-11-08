@@ -19,6 +19,7 @@ import FeedbackMaster from "./Pages/Private/FeedbackMaster";
 import RoleMaster from "./Pages/Private/RoleMaster";
 import EscaltionMaster from "./Pages/Private/EscalationMatrix";
 import InventoryList from "./Pages/Private/InventoryList";
+import Users from "./Pages/Private/UserList";
 
 function App() {
   const { pathname } = useLocation();
@@ -170,6 +171,15 @@ function App() {
             <>
               <PageTitle title="Inventory List | Complaint Management System UPPCL" />
               <InventoryList />
+            </>
+          }
+        />
+        <Route
+          path="/user-list"
+          element={
+            <>
+              <PageTitle title="Users List | Complaint Management System UPPCL" />
+              <Users />
             </>
           }
         />

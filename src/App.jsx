@@ -33,7 +33,7 @@ function App() {
           path="/"
           element={
             <>
-              <PageTitle title="SignIn | UPPCL" />
+              <PageTitle title="SignIn | Field Force Management" />
               <Login />
             </>
           }
@@ -42,7 +42,7 @@ function App() {
           path="/dashboard"
           element={
             <>
-              <PageTitle title="Dashboard | Complaint Management System UPPCL" />
+              <PageTitle title="Dashboard | Field Force Management" />
               <Dashboard />
             </>
           }
@@ -51,7 +51,7 @@ function App() {
           path="/complaint-list"
           element={
             <>
-              <PageTitle title="Complaints List | Complaint Management System UPPCL" />
+              <PageTitle title="Complaints List | Field Force Management" />
               <ComplaintList />
             </>
           }
@@ -60,7 +60,7 @@ function App() {
           path="/complaint-detail/:id"
           element={
             <>
-              <PageTitle title="Complaint Detail | Complaint Management System UPPCL" />
+              <PageTitle title="Complaint Detail | Field Force Management" />
               <ComplaintDetail />
             </>
           }
@@ -69,7 +69,7 @@ function App() {
           path="/shutdown-list"
           element={
             <>
-              <PageTitle title="Shutdown List | Complaint Management System UPPCL" />
+              <PageTitle title="Shutdown List | Field Force Management" />
               <ShutdownList />
             </>
           }
@@ -78,7 +78,7 @@ function App() {
           path="/complaint-tracking"
           element={
             <>
-              <PageTitle title="Complaint Tracking | Complaint Management System UPPCL" />
+              <PageTitle title="Complaint Tracking | Field Force Management" />
               <ComplaintTracking />
             </>
           }
@@ -87,7 +87,7 @@ function App() {
           path="/gang-list"
           element={
             <>
-              <PageTitle title="Gang List | Complaint Management System UPPCL" />
+              <PageTitle title="Gang List | Field Force Management" />
               <GangList />
             </>
           }
@@ -96,7 +96,7 @@ function App() {
           path="/equipment-list"
           element={
             <>
-              <PageTitle title="Safety Checklist | Complaint Management System UPPCL" />
+              <PageTitle title="Safety Checklist | Field Force Management" />
               <SafetyEquipmentList />
             </>
           }
@@ -105,7 +105,7 @@ function App() {
           path="/category-list"
           element={
             <>
-              <PageTitle title="Gang Category List | Complaint Management System UPPCL" />
+              <PageTitle title="Gang Category List | Field Force Management" />
               <GangCategoryList />
             </>
           }
@@ -114,7 +114,7 @@ function App() {
           path="/item-list"
           element={
             <>
-              <PageTitle title="Consumable Item List | Complaint Management System UPPCL" />
+              <PageTitle title="Consumable Item List | Field Force Management" />
               <ConsumableItem />
             </>
           }
@@ -123,7 +123,7 @@ function App() {
           path="/dispatcher-list"
           element={
             <>
-              <PageTitle title="Dispatcher List | Complaint Management System UPPCL" />
+              <PageTitle title="Dispatcher List | Field Force Management" />
               <Dispatchers />
             </>
           }
@@ -132,7 +132,7 @@ function App() {
           path="/dispatcher-register"
           element={
             <>
-              <PageTitle title="Dispatcher Registration | Complaint Management System UPPCL" />
+              <PageTitle title="Dispatcher Registration | Field Force Management" />
               <RegisterDispatcher />
             </>
           }
@@ -141,7 +141,7 @@ function App() {
           path="/feedback-master"
           element={
             <>
-              <PageTitle title="Feedback Master | Complaint Management System UPPCL" />
+              <PageTitle title="Feedback Master | Field Force Management" />
               <FeedbackMaster />
             </>
           }
@@ -150,7 +150,7 @@ function App() {
           path="/role-master"
           element={
             <>
-              <PageTitle title="Role Master | Complaint Management System UPPCL" />
+              <PageTitle title="Role Master | Field Force Management" />
               <RoleMaster />
             </>
           }
@@ -159,7 +159,7 @@ function App() {
           path="/escalation-matrix"
           element={
             <>
-              <PageTitle title="Escalation Matrix | Complaint Management System UPPCL" />
+              <PageTitle title="Escalation Matrix | Field Force Management" />
               <EscaltionMaster />
             </>
           }
@@ -169,7 +169,7 @@ function App() {
           path="/inventory-list/:gangId"
           element={
             <>
-              <PageTitle title="Inventory List | Complaint Management System UPPCL" />
+              <PageTitle title="Inventory List | Field Force Management" />
               <InventoryList />
             </>
           }
@@ -178,7 +178,7 @@ function App() {
           path="/user-list"
           element={
             <>
-              <PageTitle title="Users List | Complaint Management System UPPCL" />
+              <PageTitle title="Users List | Field Force Management" />
               <Users />
             </>
           }

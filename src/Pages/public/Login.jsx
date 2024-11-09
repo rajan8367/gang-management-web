@@ -152,10 +152,10 @@ function Login() {
                   <div className="col-lg-6">
                     <div className="p-lg-5 p-4">
                       <div>
-                        <h5 className="text-primary">Welcome Back !</h5>
-                        <p className="text-muted">
-                          Sign in to continue to UPPCL.
-                        </p>
+                        <h5 className="text-primary">
+                          Welcome to Field Force Management
+                        </h5>
+                        <p className="text-muted">Sign in to continue.</p>
                       </div>
                       <form onSubmit={login}>
                         <div className="mt-4">

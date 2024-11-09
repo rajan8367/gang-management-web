@@ -19,6 +19,8 @@ import hold from "./../../assets/images/hold.png";
 import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import MapPicker from "../../Component/MapPicker";
+import MapComponent from "../../Component/MapComponent";
 
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -45,6 +47,7 @@ function Dashboard() {
   const [complaintId, setComplaintId] = useState("");
   const [assignType, setAssignType] = useState("");
   const [dateRange, setDateRange] = useState([null, null]);
+  const [openMap, setOpenMap] = useState(false);
   const [startDate, endDate] = dateRange;
   const [filterData, setFilterData] = useState({
     registrationDate: "",
@@ -52,6 +55,10 @@ function Dashboard() {
     toDate: "",
     complaintStatus: "",
     complaintNo: "",
+  });
+  const [location, setLocation] = useState({
+    lat: "",
+    long: "",
   });
 
   function formatDate(dateString) {
@@ -890,23 +897,24 @@ function Dashboard() {
                         </div> */}
                       </div>
                       <div className="table-responsive px-4 mt-4 table-card overflow-auto">
-                        <table className="table table-centered align-middle">
+                        <table className="table table-centered align-middle table-striped">
                           <thead className="bg-light text-muted">
                             <tr>
                               {/* <th>S.No.</th> */}
-                              <th>Complaint No.</th>
-                              <th>Consumer Account</th>
-                              <th>Consumer Name</th>
-                              <th>Consumer Mobile</th>
-                              <th>Consumer Address</th>
+                              <th>Complaint Details</th>
+                              <th>Consumer Details</th>
                               <th>Date</th>
                               <th>Status</th>
                               {userType === "dispatcher" && <th>Remark</th>}
                               {userType !== "dispatcher" ? (
                                 <>
                                   <th>Gang</th>
-                                  <th>Forward To Dispatcher</th>
-                                  <th>Re Assign</th>
+                                  {userType !== "user" && (
+                                    <>
+                                      <th>Forward To Dispatcher</th>
+                                      <th>Re Assign</th>
+                                    </>
+                                  )}
                                 </>
                               ) : (
                                 <th>Assign</th>
@@ -917,99 +925,144 @@ function Dashboard() {
                           <tbody>
                             {complaint && complaint.length > 0 ? (
                               complaint.map((complaint, index) => (
-                                <tr key={complaint._id}>
-                                  {/* <td>{index + 1}</td> */}
-                                  <td>{complaint.complaintNo}</td>
-                                  <td>{complaint.consumerAccountNo}</td>
-                                  <td>{complaint.consumerName}</td>
-                                  <td>{complaint.consumerMobile}</td>
-                                  <td>{complaint.consumerAddress}</td>
-                                  <td className="text-nowrap">
-                                    {formatDate(complaint.registrationDate)}
-                                  </td>
-                                  <td>{complaint.complaintStatus}</td>
-
-                                  {userType === "dispatcher" && (
+                                <>
+                                  <tr key={complaint._id}>
                                     <td>
-                                      {complaint?.staffRemarks.length > 0 &&
-                                        complaint?.staffRemarks[
-                                          complaint?.staffRemarks.length - 1
-                                        ].remark}
-                                      {complaint.complaintStatus === "Open" &&
-                                        complaint?.remarks}
+                                      <strong>No: </strong>
+                                      {complaint.complaintNo}
+                                      <br />
+                                      <strong>Type: </strong>
+                                      {complaint.complaintType}
                                     </td>
-                                  )}
-                                  <td>
-                                    {complaint.complaintStatus === "Open" ||
-                                    complaint.complaintStatus === "Esclate" ? (
+                                    <td>
+                                      <strong>Ac.No.: </strong>
+                                      {complaint.consumerAccountNo}
+                                      <br />
+                                      <strong>Name: </strong>
+                                      {complaint.consumerName}
+                                      <br />
+                                      <strong>Mobile: </strong>
+                                      {complaint.consumerMobile}
+                                      <br />
+                                      <strong>Address: </strong>
+                                      {complaint.consumerAddress}{" "}
                                       <button
-                                        className="btn btn-primary"
+                                        className="btn btn-primary px-1 py-0"
                                         onClick={() => {
-                                          setOpen(true);
-                                          setComplaintId(complaint._id);
-                                          setAssignType("assign");
-                                          fetchGang(complaint._id);
+                                          setLocation({
+                                            lat: complaint?.consumerLat,
+                                            long: complaint?.consumerLon,
+                                          });
+                                          setOpenMap(true);
                                         }}
-                                        disabled={showLoader}
                                       >
-                                        Assign
+                                        <i className="ri-map-pin-line"></i>
                                       </button>
-                                    ) : (
-                                      <>
-                                        {complaint?.gangDetail?.gangName}
-                                        <br />
-                                        {complaint?.gangDetail?.gangMobileNo}
-                                      </>
-                                    )}
-                                  </td>
-
-                                  {userType !== "dispatcher" && (
-                                    <td align="center">
-                                      {complaint.fwdToDispatcher == 0 &&
-                                        complaint.complaintStatus !==
-                                          "InProgress" &&
-                                        complaint.complaintStatus !==
-                                          "Resolved" && (
-                                          <button
-                                            className="btn btn-primary"
-                                            onClick={() => {
-                                              assignToDispatcher(complaint._id);
-                                            }}
-                                            disabled={showLoader}
-                                          >
-                                            Forward
-                                          </button>
-                                        )}
                                     </td>
-                                  )}
-                                  {userType !== "dispatcher" && (
                                     <td className="text-nowrap">
-                                      {complaint.complaintStatus ===
-                                        "Assigned" && (
+                                      {formatDate(complaint.registrationDate)}
+                                    </td>
+                                    <td>{complaint.complaintStatus}</td>
+
+                                    {userType === "dispatcher" && (
+                                      <td>
+                                        {complaint?.staffRemarks.length > 0 &&
+                                          complaint?.staffRemarks[
+                                            complaint?.staffRemarks.length - 1
+                                          ].remark}
+                                        {complaint.complaintStatus === "Open" &&
+                                          complaint?.remarks}
+                                      </td>
+                                    )}
+                                    <td>
+                                      {complaint.complaintStatus === "Open" ||
+                                      complaint.complaintStatus ===
+                                        "Esclate" ? (
                                         <button
-                                          className="btn btn-success"
+                                          className="btn btn-primary"
                                           onClick={() => {
                                             setOpen(true);
                                             setComplaintId(complaint._id);
-                                            setAssignType("reAssign");
+                                            setAssignType("assign");
                                             fetchGang(complaint._id);
                                           }}
                                           disabled={showLoader}
                                         >
-                                          Re Assign
+                                          Assign
                                         </button>
+                                      ) : (
+                                        <>
+                                          {complaint?.gangDetail?.gangName}
+                                          <br />
+                                          {complaint?.gangDetail?.gangMobileNo}
+                                        </>
                                       )}
                                     </td>
-                                  )}
-                                  <td>
-                                    <button
-                                      className="btn btn-primary"
-                                      onClick={() => viewDetail(complaint._id)}
+
+                                    {userType !== "dispatcher" &&
+                                      userType !== "user" && (
+                                        <td align="center">
+                                          {complaint.fwdToDispatcher == 0 &&
+                                            complaint.complaintStatus !==
+                                              "InProgress" &&
+                                            complaint.complaintStatus !==
+                                              "Resolved" && (
+                                              <button
+                                                className="btn btn-primary"
+                                                onClick={() => {
+                                                  assignToDispatcher(
+                                                    complaint._id
+                                                  );
+                                                }}
+                                                disabled={showLoader}
+                                              >
+                                                Forward
+                                              </button>
+                                            )}
+                                        </td>
+                                      )}
+                                    {userType !== "dispatcher" &&
+                                      userType !== "user" && (
+                                        <td className="text-nowrap">
+                                          {complaint.complaintStatus ===
+                                            "Assigned" && (
+                                            <button
+                                              className="btn btn-success"
+                                              onClick={() => {
+                                                setOpen(true);
+                                                setComplaintId(complaint._id);
+                                                setAssignType("reAssign");
+                                                fetchGang(complaint._id);
+                                              }}
+                                              disabled={showLoader}
+                                            >
+                                              Re Assign
+                                            </button>
+                                          )}
+                                        </td>
+                                      )}
+                                    <td>
+                                      <button
+                                        className="btn btn-primary"
+                                        onClick={() =>
+                                          viewDetail(complaint._id)
+                                        }
+                                      >
+                                        View
+                                      </button>
+                                    </td>
+                                  </tr>
+                                  <tr key={"remark-" + complaint._id}>
+                                    <td
+                                      colSpan={
+                                        userType === "dispatcher" ? 7 : 8
+                                      }
                                     >
-                                      View
-                                    </button>
-                                  </td>
-                                </tr>
+                                      <strong>1912 complaint remark: </strong>
+                                      {complaint.remarks}
+                                    </td>
+                                  </tr>
+                                </>
                               ))
                             ) : (
                               <tr>
@@ -1085,6 +1138,20 @@ function Dashboard() {
               </tbody>
             </table>
           </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={openMap}
+        TransitionComponent={Transition}
+        keepMounted
+        onClose={() => setOpenMap(false)}
+        fullWidth
+        maxWidth="md"
+        sx={{ zIndex: 99999 }}
+      >
+        <DialogTitle>Consumer Location</DialogTitle>
+        <DialogContent>
+          <MapComponent lat={location.lat} lng={location.long} />
         </DialogContent>
       </Dialog>
     </Layout>

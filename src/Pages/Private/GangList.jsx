@@ -16,6 +16,7 @@ import Swal from "sweetalert2";
 import TextField from "@mui/material/TextField";
 import Autocomplete from "@mui/material/Autocomplete";
 import MapComponent from "../../Component/MapComponent";
+import MultiLocation from "../../Component/MultiLocations";
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
@@ -24,7 +25,7 @@ function GangList() {
   const { token, user, setCustomMsg } = useUserContext();
   const navigate = useNavigate();
   const [showLoader, setShowLoader] = useState(false);
-  const [gangList, setGangList] = useState(null);
+  const [gangList, setGangList] = useState([]);
   const [open, setOpen] = useState(false);
   const [openMember, setOpenMember] = useState(false);
   const [mode, setMode] = useState("add");
@@ -36,6 +37,7 @@ function GangList() {
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
   const [openMap, setOpenMap] = useState(false);
+  const [multiLocation, setMultiLocation] = useState(false);
   const [vanList, setVanList] = useState([]);
   const [value, setValue] = useState("");
   const [gangMap, setGangMap] = useState(false);
@@ -669,7 +671,7 @@ function GangList() {
                     <h5 className="card-title mb-0 flex-grow-1">Gangs List</h5>
                     <div className="flex-shrink-0">
                       <button
-                        className="btn btn-primary add-btn"
+                        className="btn btn-primary add-btn me-2"
                         onClick={() => {
                           setMode("add");
                           handleClickOpen();
@@ -677,6 +679,14 @@ function GangList() {
                       >
                         <i className="ri-add-line align-bottom me-1"></i> Create
                         Gang
+                      </button>
+                      <button
+                        className="btn btn-success add-btn"
+                        onClick={() => {
+                          setMultiLocation(true);
+                        }}
+                      >
+                        <i className="ri-user-location-fill"></i> Gangs Location
                       </button>
                     </div>
                   </div>
@@ -1214,17 +1224,27 @@ function GangList() {
         </div>
       </div>
       <Dialog
-        open={gangMap}
+        open={gangMap || multiLocation}
         TransitionComponent={Transition}
         keepMounted
-        onClose={() => setGangMap(false)}
+        onClose={() => (gangMap ? setGangMap(false) : setMultiLocation(false))}
         fullWidth
         maxWidth="md"
         sx={{ zIndex: 99999 }}
       >
-        <DialogTitle>Gang Location</DialogTitle>
+        <DialogTitle>
+          {gangMap ? "Gang Location" : "All Gangs Location"}
+        </DialogTitle>
         <DialogContent>
-          <MapComponent lat={location.lat} open={gangMap} lng={location.long} />
+          {gangMap ? (
+            <MapComponent
+              lat={location.lat}
+              open={gangMap}
+              lng={location.long}
+            />
+          ) : (
+            <MultiLocation open={multiLocation} locations={gangList} />
+          )}
         </DialogContent>
       </Dialog>
     </Layout>

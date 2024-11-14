@@ -4,7 +4,7 @@ import L from "leaflet";
 
 const MapComponent = ({ lat, lng, open }) => {
   const position = [lat, lng];
-  const defaultZoom = 7;
+  const defaultZoom = 15;
 
   // Custom icon
   const customIcon = L.icon({
@@ -21,15 +21,15 @@ const MapComponent = ({ lat, lng, open }) => {
     const map = useMap();
     useEffect(() => {
       if (open) {
-        map.setView([26.850804497869817, 80.9490420086773], defaultZoom);
+        map.setView([lat, lng], defaultZoom);
       }
-    }, [open, map]);
+    }, [open, map, lat, lng]);
     return null;
   };
 
   return (
     <MapContainer
-      center={[26.850804497869817, 80.9490420086773]}
+      center={[lat, lng]}
       zoom={defaultZoom}
       style={{ height: "400px", width: "100%" }}
     >

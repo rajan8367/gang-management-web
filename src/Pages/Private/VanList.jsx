@@ -54,6 +54,10 @@ function VanList() {
         console.error("Error fetching Role:", error);
       });
   };
+  const formatTime = (time) => {
+    let clock = new Date(time);
+    return clock.getHours() + ":" + clock.getMinutes();
+  };
   return (
     <Layout>
       {showLoader && <Loader />}
@@ -113,7 +117,10 @@ function VanList() {
                               <td>
                                 {role.lat}, {role.lngt}
                               </td>
-                              <td>{formatDate(role.updatedAt)}</td>
+                              <td>
+                                {formatDate(role.updatedAt)} at{" "}
+                                {formatTime(role.updatedAt)}
+                              </td>
                             </tr>
                           ))
                         ) : (

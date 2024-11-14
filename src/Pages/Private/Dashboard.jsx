@@ -1,6 +1,6 @@
 import Layout from "../../Component/Layout";
 import { useUserContext } from "../../hooks/userContext";
-import { forwardRef, useEffect, useState } from "react";
+import React, { forwardRef, useEffect, useState } from "react";
 import { apiUrl } from "../../Constant";
 import moment from "moment";
 import Loader from "../../Component/Loader";
@@ -21,6 +21,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import MapPicker from "../../Component/MapPicker";
 import MapComponent from "../../Component/MapComponent";
+import Pagination from "../../Component/Pagination";
 
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -36,7 +37,6 @@ const complaintStatus = [
 function Dashboard() {
   const { user, token, setCustomMsg, userType } = useUserContext();
   const navigate = useNavigate();
-  console.log(userType);
   const [greet, setGreet] = useState("");
   const [complaint, setComplaint] = useState(null);
   const [count, setCount] = useState(null);
@@ -48,6 +48,8 @@ function Dashboard() {
   const [assignType, setAssignType] = useState("");
   const [dateRange, setDateRange] = useState([null, null]);
   const [openMap, setOpenMap] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
   const [startDate, endDate] = dateRange;
   const [filterData, setFilterData] = useState({
     registrationDate: "",
@@ -73,7 +75,7 @@ function Dashboard() {
     if (token !== "") {
       fetchComplaint();
     }
-  }, [token, filterData.complaintStatus]);
+  }, [token, filterData.complaintStatus, currentPage]);
 
   const fetchComplaint = () => {
     setShowLoader(true);
@@ -84,7 +86,7 @@ function Dashboard() {
       complaintStatus: filterData.complaintStatus,
       complaintID: "",
       complaintNo: filterData.complaintNo,
-      page: 1,
+      page: currentPage,
       limit: 50,
     };
     axios
@@ -95,10 +97,11 @@ function Dashboard() {
         },
       })
       .then((response) => {
-        console.log("Response:", response?.data?.complaints);
+        //console.log("Response:", response?.data?.complaints);
         setShowLoader(false);
         setComplaint(response?.data?.complaints);
         setCount(response.data.statusCounts);
+        setTotalPages(response.data?.pagination?.totalPages);
       })
       .catch((error) => {
         setShowLoader(false);
@@ -925,8 +928,8 @@ function Dashboard() {
                           <tbody>
                             {complaint && complaint.length > 0 ? (
                               complaint.map((complaint, index) => (
-                                <>
-                                  <tr key={complaint._id}>
+                                <React.Fragment key={complaint._id}>
+                                  <tr>
                                     <td>
                                       <strong>No: </strong>
                                       {complaint.complaintNo}
@@ -1052,7 +1055,7 @@ function Dashboard() {
                                       </button>
                                     </td>
                                   </tr>
-                                  <tr key={"remark-" + complaint._id}>
+                                  <tr>
                                     <td
                                       colSpan={
                                         userType === "dispatcher" ? 7 : 8
@@ -1062,7 +1065,7 @@ function Dashboard() {
                                       {complaint.remarks}
                                     </td>
                                   </tr>
-                                </>
+                                </React.Fragment>
                               ))
                             ) : (
                               <tr>
@@ -1074,6 +1077,13 @@ function Dashboard() {
                             )}
                           </tbody>
                         </table>
+                        {totalPages > 1 && (
+                          <Pagination
+                            totalPages={totalPages}
+                            currentPage={currentPage}
+                            setCurrentPage={setCurrentPage}
+                          />
+                        )}
                       </div>
                     </div>
                   </div>

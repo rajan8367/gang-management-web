@@ -1,11 +1,12 @@
-import React from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import React, { useEffect, useState } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 
-const MapComponent = ({ lat, lng }) => {
+const MapComponent = ({ lat, lng, open }) => {
   const position = [lat, lng];
+  const defaultZoom = 7;
 
-  // Custom icon (optional)
+  // Custom icon
   const customIcon = L.icon({
     iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
     iconSize: [25, 41],
@@ -15,10 +16,21 @@ const MapComponent = ({ lat, lng }) => {
     shadowSize: [41, 41],
   });
 
+  // Component to reset zoom
+  const ResetZoom = () => {
+    const map = useMap();
+    useEffect(() => {
+      if (open) {
+        map.setView([26.850804497869817, 80.9490420086773], defaultZoom);
+      }
+    }, [open, map]);
+    return null;
+  };
+
   return (
     <MapContainer
       center={[26.850804497869817, 80.9490420086773]}
-      zoom={7}
+      zoom={defaultZoom}
       style={{ height: "400px", width: "100%" }}
     >
       <TileLayer
@@ -30,6 +42,7 @@ const MapComponent = ({ lat, lng }) => {
           Latitude: {lat}, Longitude: {lng}
         </Popup>
       </Marker>
+      <ResetZoom />
     </MapContainer>
   );
 };

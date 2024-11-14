@@ -1151,7 +1151,7 @@ function Dashboard() {
       >
         <DialogTitle>Consumer Location</DialogTitle>
         <DialogContent>
-          <MapComponent lat={location.lat} lng={location.long} />
+          <MapComponent lat={location.lat} open={openMap} lng={location.long} />
         </DialogContent>
       </Dialog>
     </Layout>

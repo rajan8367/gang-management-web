@@ -114,6 +114,19 @@ function Sidebar() {
                 </li>
                 <li className="nav-item">
                   <Link
+                    to="/van-list"
+                    className={`${
+                      pathname === "/van-list"
+                        ? "nav-link menu-link active"
+                        : "nav-link menu-link "
+                    } `}
+                  >
+                    <i className="ri-truck-line"></i>{" "}
+                    <span data-key="t-apps">Vans</span>
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link
                     to="/equipment-list"
                     className={`${
                       pathname === "/equipment-list"

@@ -46,7 +46,7 @@ function Header() {
                 </span>
               </button>
               <form className="app-search d-none d-md-block">
-                <div className="position-relative">
+                {/* <div className="position-relative">
                   <input
                     type="text"
                     className="form-control"
@@ -58,7 +58,7 @@ function Header() {
                     className="mdi mdi-close-circle search-widget-icon search-widget-icon-close d-none"
                     id="search-close-options"
                   ></span>
-                </div>
+                </div> */}
                 <div
                   className="dropdown-menu dropdown-menu-lg"
                   id="search-dropdown"

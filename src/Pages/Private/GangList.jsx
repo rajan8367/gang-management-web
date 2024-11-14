@@ -13,6 +13,9 @@ import { Fab } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import MapPicker from "../../Component/MapPicker";
 import Swal from "sweetalert2";
+import TextField from "@mui/material/TextField";
+import Autocomplete from "@mui/material/Autocomplete";
+import MapComponent from "../../Component/MapComponent";
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
@@ -33,6 +36,13 @@ function GangList() {
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
   const [openMap, setOpenMap] = useState(false);
+  const [vanList, setVanList] = useState([]);
+  const [value, setValue] = useState("");
+  const [gangMap, setGangMap] = useState(false);
+  const [location, setLocation] = useState({
+    lat: "",
+    long: "",
+  });
   const [gangData, setGangData] = useState({
     category: "",
     gangID: "",
@@ -41,10 +51,11 @@ function GangList() {
     gangName: "",
     gangMobile: "",
     tools_availabe: "",
+    van_attach: "",
+    vanNo: "",
     location: "",
     division: "",
     subStation: "",
-
     feeder: "",
     security_equipment: [
       {
@@ -102,6 +113,8 @@ function GangList() {
       gangName: "",
       gangMobile: "",
       tools_availabe: "",
+      van_attach: "",
+      vanNo: "",
       location: "",
     }));
   };
@@ -139,7 +152,7 @@ function GangList() {
         },
       })
       .then((response) => {
-        console.log("Response:", response);
+        //console.log("Response:", response);
         setDivisionList(response?.data?.divisions);
         setShowLoader(false);
       })
@@ -159,7 +172,7 @@ function GangList() {
         },
       })
       .then((response) => {
-        console.log("Response:", response);
+        //console.log("Response:", response);
         setSubStationList(response?.data?.substationList);
         setShowLoader(false);
       })
@@ -207,6 +220,7 @@ function GangList() {
       [name]: value,
     }));
   };
+
   const addGang = (e) => {
     e.preventDefault();
     if (gangData.gangName === "") {
@@ -257,46 +271,6 @@ function GangList() {
       });
       return;
     }
-
-    if (gangData.feeder === "") {
-      Swal.fire({
-        title: "Error!",
-        text: "Enter Feeder Name",
-        icon: "error",
-        confirmButtonText: "Ok",
-      });
-      return;
-    }
-
-    if (gangData.location === "") {
-      Swal.fire({
-        title: "Error!",
-        text: "Enter Location Name",
-        icon: "error",
-        confirmButtonText: "Ok",
-      });
-      return;
-    }
-
-    if (gangData.latitude === "") {
-      Swal.fire({
-        title: "Error!",
-        text: "Select Lat. Long by clicking pick location",
-        icon: "error",
-        confirmButtonText: "Ok",
-      });
-      return;
-    }
-
-    if (gangData.tools_availabe === "") {
-      Swal.fire({
-        title: "Error!",
-        text: "Select tool available",
-        icon: "error",
-        confirmButtonText: "Ok",
-      });
-      return;
-    }
     setShowLoader(true);
     const data = {
       gangCategoryID: gangData.category,
@@ -305,6 +279,8 @@ function GangList() {
       gangName: gangData.gangName,
       gangMobile: gangData.gangMobile,
       tools_availabe: gangData.tools_availabe,
+      vanAvailable: gangData.van_attach,
+      vanNo: gangData.vanNo,
       location: gangData.location,
       feeder: gangData.feeder,
       security_equipment: gangData.security_equipment,
@@ -336,6 +312,8 @@ function GangList() {
           gangName: "",
           gangMobile: "",
           tools_availabe: "",
+          van_attach: "",
+          vanNo: "",
           location: "",
           subStation: "",
 
@@ -398,55 +376,17 @@ function GangList() {
       });
       return;
     }
-
-    if (gangData.feeder === "") {
-      Swal.fire({
-        title: "Error!",
-        text: "Enter Feeder Name",
-        icon: "error",
-        confirmButtonText: "Ok",
-      });
-      return;
-    }
-
-    if (gangData.location === "") {
-      Swal.fire({
-        title: "Error!",
-        text: "Enter Location Name",
-        icon: "error",
-        confirmButtonText: "Ok",
-      });
-      return;
-    }
-
-    if (gangData.latitude === "") {
-      Swal.fire({
-        title: "Error!",
-        text: "Select Lat. Long by clicking pick location",
-        icon: "error",
-        confirmButtonText: "Ok",
-      });
-      return;
-    }
-
-    if (gangData.tools_availabe === "") {
-      Swal.fire({
-        title: "Error!",
-        text: "Select tool available",
-        icon: "error",
-        confirmButtonText: "Ok",
-      });
-      return;
-    }
     setShowLoader(true);
     const data = {
-      gangCategory: gangData.category,
+      gangCategoryID: gangData.category,
       gangID: gangData.gangID,
       gangLeaderName: gangData.gangLeaderName,
       gangLeaderID: gangData.gangLeaderID,
       gangName: gangData.gangName,
       gangMobile: gangData.gangMobile,
       tools_availabe: gangData.tools_availabe,
+      vanAvailable: gangData.van_attach,
+      vanNo: gangData.vanNo,
       location: gangData.location,
       substation_id: gangData.subStation,
       feeder: gangData.feeder,
@@ -486,6 +426,8 @@ function GangList() {
           gangName: "",
           gangMobile: "",
           tools_availabe: "",
+          van_attach: "",
+          vanNo: "",
           location: "",
           subStation: "",
 
@@ -507,6 +449,7 @@ function GangList() {
         console.log(error);
       });
   };
+
   const getGangData = (id) => {
     setShowLoader(true);
     const data = {
@@ -523,8 +466,9 @@ function GangList() {
       .then((response) => {
         console.log("Response:", response);
         setMode("edit");
+        searchVan();
         const {
-          gangCategory,
+          gangCategoryID,
           gangName,
           gangMobile,
           gangLeaderName,
@@ -536,13 +480,14 @@ function GangList() {
           substation_id,
           latitude,
           longitude,
+          vanAvailable,
+          vanNo,
         } = response.data.gangs[0];
-        //alert(substation_id);
         setGangData((prevGangData) => ({
           ...prevGangData,
           latitude: latitude,
           longitude: longitude,
-          category: gangCategory,
+          category: gangCategoryID._id,
           gangName: gangName,
           gangMobile: gangMobile,
           gangLeaderID: gangLeaderID,
@@ -550,6 +495,8 @@ function GangList() {
           feeder: feeder,
           location: location,
           tools_availabe: tools_availabe,
+          van_attach: vanAvailable,
+          vanNo: vanNo,
           subStation: substation_id,
           division: division_id,
         }));
@@ -668,6 +615,31 @@ function GangList() {
         console.log(error);
       });
   };
+  useEffect(() => {
+    searchVan();
+  }, [gangData.vanNo]);
+  const searchVan = () => {
+    setShowLoader(true);
+    const data = {
+      vname: gangData.vanNo,
+      limit: 1000,
+    };
+    axios
+      .post(`${apiUrl}/list-vandata`, data, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        setVanList(response.data?.data || []);
+        setShowLoader(false);
+      })
+      .catch((error) => {
+        setShowLoader(false);
+        console.error("Error fetching Role:", error);
+      });
+  };
   return (
     <Layout>
       {showLoader && <Loader />}
@@ -718,10 +690,8 @@ function GangList() {
                           <th scope="col" style={{ width: "40px" }}>
                             S.No.
                           </th>
-                          <th>Gang Category</th>
-                          <th>Gang Name</th>
-                          <th>Gang Mobile</th>
-                          <th>Sub Station</th>
+                          <th>Gang Detail</th>
+                          <th>Van Detail</th>
                           <th>Lat. - Long.</th>
                           <th align="center">Action</th>
                         </tr>
@@ -732,13 +702,36 @@ function GangList() {
                           gangList.map((gang, index) => (
                             <tr key={gang._id}>
                               <td scope="row">{index + 1}</td>
-                              <td>{gang.gangCategoryID.categoryName}</td>
-                              <td>{gang.gangName}</td>
-                              <td>{gang.gangMobile}</td>
-                              <td>{gang.substation}</td>
-
+                              <td>
+                                <strong>Category:</strong>{" "}
+                                {gang.gangCategoryID.categoryName}
+                                <br />
+                                <strong>Name:</strong> {gang.gangName}
+                                <br />
+                                <strong>Mobile:</strong> {gang.gangMobile}
+                                <br />
+                                <strong>SubStation:</strong> {gang.substation}
+                              </td>
+                              <td>
+                                {gang.vanAvailable === "yes"
+                                  ? gang.vanNo
+                                  : "Van not attached"}
+                              </td>
                               <td>
                                 {gang.latitude}, {gang.longitude}
+                                <button
+                                  className="btn btn-primary px-1 py-0"
+                                  style={{ display: "block" }}
+                                  onClick={() => {
+                                    setLocation({
+                                      lat: gang?.latitude,
+                                      long: gang?.longitude,
+                                    });
+                                    setGangMap(true);
+                                  }}
+                                >
+                                  <i className="ri-map-pin-line"></i>
+                                </button>
                               </td>
                               <td>
                                 <button
@@ -1014,6 +1007,78 @@ function GangList() {
                       </button>
                     </div>
                     <div className="col-lg-4">
+                      <label className="form-label">
+                        Is van attached with gang?
+                      </label>
+                      <div>
+                        <div className="form-check form-check-inline">
+                          <input
+                            className="form-check-input"
+                            type="radio"
+                            name="van_attach"
+                            value="yes"
+                            checked={gangData.van_attach === "yes"}
+                            onChange={handleChange}
+                          />
+                          <label
+                            className="form-check-label"
+                            htmlFor="toolsAvailableYes"
+                          >
+                            Yes
+                          </label>
+                        </div>
+                        <div className="form-check form-check-inline">
+                          <input
+                            className="form-check-input"
+                            type="radio"
+                            name="van_attach"
+                            checked={gangData.van_attach === "no"}
+                            value="no"
+                            onChange={handleChange}
+                          />
+                          <label
+                            className="form-check-label"
+                            htmlFor="toolsAvailableNo"
+                          >
+                            No
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="col-lg-4">
+                      {gangData.van_attach === "yes" && (
+                        <Autocomplete
+                          size="small"
+                          fullWidth
+                          disablePortal
+                          options={vanList}
+                          value={
+                            vanList.find(
+                              (van) => van.vname === gangData.vanNo
+                            ) || null
+                          }
+                          inputValue={gangData.vanNo || ""}
+                          onInputChange={(event, newInputValue) => {
+                            console.log(newInputValue);
+                            setGangData((prev) => ({
+                              ...prev,
+                              vanNo: newInputValue,
+                            }));
+                          }}
+                          getOptionLabel={(van) => van.vname || ""}
+                          isOptionEqualToValue={(option, value) =>
+                            option.vname === value
+                          }
+                          sx={{ zIndex: 9999 }}
+                          renderInput={(params) => (
+                            <TextField {...params} label="Search Van" />
+                          )}
+                        />
+                      )}
+                    </div>
+
+                    <div className="col-lg-4">
                       <label className="form-label">Is tools available?</label>
                       <div>
                         <div className="form-check form-check-inline">
@@ -1148,6 +1213,20 @@ function GangList() {
           </Dialog>
         </div>
       </div>
+      <Dialog
+        open={gangMap}
+        TransitionComponent={Transition}
+        keepMounted
+        onClose={() => setGangMap(false)}
+        fullWidth
+        maxWidth="md"
+        sx={{ zIndex: 99999 }}
+      >
+        <DialogTitle>Gang Location</DialogTitle>
+        <DialogContent>
+          <MapComponent lat={location.lat} open={gangMap} lng={location.long} />
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }

@@ -20,6 +20,7 @@ import RoleMaster from "./Pages/Private/RoleMaster";
 import EscaltionMaster from "./Pages/Private/EscalationMatrix";
 import InventoryList from "./Pages/Private/InventoryList";
 import Users from "./Pages/Private/UserList";
+import VanList from "./Pages/Private/VanList";
 
 function App() {
   const { pathname } = useLocation();
@@ -180,6 +181,15 @@ function App() {
             <>
               <PageTitle title="Users List | Field Force Management" />
               <Users />
+            </>
+          }
+        />
+        <Route
+          path="/van-list"
+          element={
+            <>
+              <PageTitle title="Van List | Field Force Management" />
+              <VanList />
             </>
           }
         />

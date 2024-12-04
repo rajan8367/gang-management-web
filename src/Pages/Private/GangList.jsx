@@ -17,6 +17,7 @@ import TextField from "@mui/material/TextField";
 import Autocomplete from "@mui/material/Autocomplete";
 import MapComponent from "../../Component/MapComponent";
 import MultiLocation from "../../Component/MultiLocations";
+import Pagination from "../../Component/Pagination";
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
@@ -41,6 +42,10 @@ function GangList() {
   const [vanList, setVanList] = useState([]);
   const [value, setValue] = useState("");
   const [gangMap, setGangMap] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [filterData, setFilterData] = useState([]);
+  const [query, setQuery] = useState("");
   const [location, setLocation] = useState({
     lat: "",
     long: "",
@@ -89,6 +94,7 @@ function GangList() {
       }
     }
   }, [user]);
+
   useEffect(() => {
     if (token !== "") {
       fetchGang();
@@ -96,7 +102,8 @@ function GangList() {
       fetchDivision();
       fetchGangCategory();
     }
-  }, [token]);
+  }, [token, currentPage, query]);
+
   useEffect(() => {
     if (gangData.division !== "") fetchSubstation();
   }, [gangData.division]);
@@ -120,11 +127,14 @@ function GangList() {
       location: "",
     }));
   };
+
   const fetchGang = () => {
     setShowLoader(true);
     const data = {
-      search: "",
+      search: query,
       gangID: "",
+      page: currentPage,
+      limit: 10,
     };
     axios
       .post(`${apiUrl}list-gang`, data, {
@@ -135,8 +145,10 @@ function GangList() {
       })
       .then((response) => {
         console.log("Response:", response);
+        setFilterData(response?.data?.gangs);
         setGangList(response?.data?.gangs);
         setShowLoader(false);
+        setTotalPages(response.data?.pages);
       })
       .catch((error) => {
         setShowLoader(false);
@@ -225,55 +237,34 @@ function GangList() {
 
   const addGang = (e) => {
     e.preventDefault();
-    if (gangData.gangName === "") {
-      Swal.fire({
-        title: "Error!",
-        text: "Enter Gang Name",
-        icon: "error",
-        confirmButtonText: "Ok",
-      });
-      return;
-    }
-    if (gangData.category === "") {
-      Swal.fire({
-        title: "Error!",
-        text: "Select category",
-        icon: "error",
-        confirmButtonText: "Ok",
-      });
+
+    // Validation function
+    const validateField = (field, message) => {
+      if (!field || field.trim() === "") {
+        Swal.fire({
+          title: "Error!",
+          text: message,
+          icon: "error",
+          confirmButtonText: "Ok",
+        });
+        return false;
+      }
+      return true;
+    };
+
+    // Validate required fields
+    if (
+      !validateField(gangData.gangName, "Enter Gang Name") ||
+      !validateField(gangData.category, "Select category") ||
+      !validateField(gangData.gangMobile, "Enter mobile number")
+    ) {
       return;
     }
 
-    if (gangData.gangMobile === "") {
-      Swal.fire({
-        title: "Error!",
-        text: "Enter mobile number",
-        icon: "error",
-        confirmButtonText: "Ok",
-      });
-      return;
-    }
-
-    if (gangData.division === "") {
-      Swal.fire({
-        title: "Error!",
-        text: "Select Division",
-        icon: "error",
-        confirmButtonText: "Ok",
-      });
-      return;
-    }
-
-    if (gangData.subStation === "") {
-      Swal.fire({
-        title: "Error!",
-        text: "Select Sub station",
-        icon: "error",
-        confirmButtonText: "Ok",
-      });
-      return;
-    }
+    // Show loader
     setShowLoader(true);
+
+    // Prepare data
     const data = {
       gangCategoryID: gangData.category,
       gangLeaderName: gangData.gangLeaderName,
@@ -290,6 +281,8 @@ function GangList() {
       longitude: gangData.longitude,
       substation_id: gangData.subStation,
     };
+
+    // API Request
     axios
       .post(`${apiUrl}add-gang`, data, {
         headers: {
@@ -300,12 +293,16 @@ function GangList() {
       .then((response) => {
         console.log("Response:", response);
         setShowLoader(false);
+
+        // Show success message
         setCustomMsg((prevMsg) => ({
           ...prevMsg,
           isVisible: true,
           text: response?.data?.message,
           type: "success",
         }));
+
+        // Reset form data
         setGangData({
           category: "",
           gangID: "",
@@ -318,7 +315,6 @@ function GangList() {
           vanNo: "",
           location: "",
           subStation: "",
-
           feeder: "",
           security_equipment: [
             {
@@ -329,12 +325,25 @@ function GangList() {
           latitude: "",
           longitude: "",
         });
+
+        // Close the modal
         setOpen(false);
+
+        // Refresh the gang list
         fetchGang();
       })
       .catch((error) => {
         setShowLoader(false);
-        console.log(error);
+
+        // Show error message
+        Swal.fire({
+          title: "Error!",
+          text: error.response?.data?.message || "Something went wrong",
+          icon: "error",
+          confirmButtonText: "Ok",
+        });
+
+        console.error("Error:", error);
       });
   };
 
@@ -369,15 +378,6 @@ function GangList() {
       return;
     }
 
-    if (gangData.subStation === "") {
-      Swal.fire({
-        title: "Error!",
-        text: "Select Sub station",
-        icon: "error",
-        confirmButtonText: "Ok",
-      });
-      return;
-    }
     setShowLoader(true);
     const data = {
       gangCategoryID: gangData.category,
@@ -448,6 +448,12 @@ function GangList() {
       })
       .catch((error) => {
         setShowLoader(false);
+        Swal.fire({
+          title: "Error!",
+          text: error.response?.data?.message || "Something went wrong",
+          icon: "error",
+          confirmButtonText: "Ok",
+        });
         console.log(error);
       });
   };
@@ -620,6 +626,7 @@ function GangList() {
   useEffect(() => {
     searchVan();
   }, [gangData.vanNo]);
+
   const searchVan = () => {
     setShowLoader(true);
     const data = {
@@ -642,6 +649,7 @@ function GangList() {
         console.error("Error fetching Role:", error);
       });
   };
+
   return (
     <Layout>
       {showLoader && <Loader />}
@@ -668,7 +676,18 @@ function GangList() {
               <div className="card" id="ticketsList">
                 <div className="card-header border-0">
                   <div className="d-flex align-items-center">
-                    <h5 className="card-title mb-0 flex-grow-1">Gangs List</h5>
+                    <h5 className="card-title mb-0 flex-grow-1">
+                      <div className="col-md-6">
+                        <input
+                          className="form-control"
+                          placeholder="Search by name or mobile"
+                          onChange={(e) => {
+                            setQuery(e.target.value);
+                            setCurrentPage(1);
+                          }}
+                        />
+                      </div>
+                    </h5>
                     <div className="flex-shrink-0">
                       <button
                         className="btn btn-primary add-btn me-2"
@@ -702,16 +721,18 @@ function GangList() {
                           </th>
                           <th>Gang Detail</th>
                           <th>Van Detail</th>
-                          <th>Lat. - Long.</th>
+                          <th>Loction</th>
                           <th align="center">Action</th>
                         </tr>
                       </thead>
                       <tbody className="list form-check-all">
-                        {gangList &&
-                          gangList.length > 0 &&
-                          gangList.map((gang, index) => (
+                        {filterData &&
+                          filterData.length > 0 &&
+                          filterData.map((gang, index) => (
                             <tr key={gang._id}>
-                              <td scope="row">{index + 1}</td>
+                              <td scope="row">
+                                {(currentPage - 1) * 10 + index + 1}
+                              </td>
                               <td>
                                 <strong>Category:</strong>{" "}
                                 {gang.gangCategoryID.categoryName}
@@ -720,7 +741,7 @@ function GangList() {
                                 <br />
                                 <strong>Mobile:</strong> {gang.gangMobile}
                                 <br />
-                                <strong>SubStation:</strong> {gang.substation}
+                                {/* <strong>SubStation:</strong> {gang.substation} */}
                               </td>
                               <td>
                                 {gang.vanAvailable === "yes"
@@ -728,20 +749,22 @@ function GangList() {
                                   : "Van not attached"}
                               </td>
                               <td>
-                                {gang.latitude}, {gang.longitude}
-                                <button
-                                  className="btn btn-primary px-1 py-0"
-                                  style={{ display: "block" }}
-                                  onClick={() => {
-                                    setLocation({
-                                      lat: gang?.latitude,
-                                      long: gang?.longitude,
-                                    });
-                                    setGangMap(true);
-                                  }}
-                                >
-                                  <i className="ri-map-pin-line"></i>
-                                </button>
+                                {gang.latitude !== "" &&
+                                  gang.longitude !== "" && (
+                                    <button
+                                      className="btn btn-primary px-1 py-0"
+                                      style={{ display: "block" }}
+                                      onClick={() => {
+                                        setLocation({
+                                          lat: gang?.latitude,
+                                          long: gang?.longitude,
+                                        });
+                                        setGangMap(true);
+                                      }}
+                                    >
+                                      <i className="ri-map-pin-line"></i>
+                                    </button>
+                                  )}
                               </td>
                               <td>
                                 <button
@@ -795,6 +818,13 @@ function GangList() {
                           ))}
                       </tbody>
                     </table>
+                    {totalPages > 1 && (
+                      <Pagination
+                        totalPages={totalPages}
+                        currentPage={currentPage}
+                        setCurrentPage={setCurrentPage}
+                      />
+                    )}
                   </div>
                 </div>
               </div>

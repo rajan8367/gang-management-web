@@ -157,6 +157,12 @@ function GangCategoryList() {
       })
       .catch((error) => {
         setShowLoader(false);
+        Swal.fire({
+          title: "Error!",
+          text: error.response?.data?.message || "Something went wrong",
+          icon: "error",
+          confirmButtonText: "Ok",
+        });
         console.log(error);
       });
   };
@@ -214,6 +220,12 @@ function GangCategoryList() {
       })
       .catch((error) => {
         setShowLoader(false);
+        Swal.fire({
+          title: "Error!",
+          text: error.response?.data?.message || "Something went wrong",
+          icon: "error",
+          confirmButtonText: "Ok",
+        });
         console.log(error);
       });
   };

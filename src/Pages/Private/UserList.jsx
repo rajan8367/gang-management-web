@@ -12,6 +12,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { Fab } from "@mui/material";
 import Swal from "sweetalert2";
 import { Link } from "react-router-dom";
+import Pagination from "../../Component/Pagination";
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
@@ -22,6 +23,9 @@ function Users() {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState("add");
   const [dispatchers, setDispatchers] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [query, setQuery] = useState("");
   const [dispatcherData, setDispatcherData] = useState({
     id: "",
     name: "",
@@ -35,7 +39,7 @@ function Users() {
     if (token !== "") {
       fetchUser();
     }
-  }, [token]);
+  }, [token, currentPage, query]);
   const handleClickOpen = () => {
     setOpen(true);
   };
@@ -57,7 +61,9 @@ function Users() {
   const fetchUser = () => {
     setShowLoader(true);
     const data = {
-      search: "",
+      search: query,
+      page: currentPage,
+      pageSize: 10,
       roleBased: "user",
       isAssigned: "",
     };
@@ -71,6 +77,7 @@ function Users() {
       .then((response) => {
         console.log("Response:", response);
         setDispatchers(response.data?.users);
+        setTotalPages(response.data?.pages);
         setShowLoader(false);
       })
       .catch((error) => {
@@ -196,6 +203,12 @@ function Users() {
       })
       .catch((error) => {
         setShowLoader(false);
+        Swal.fire({
+          title: "Error!",
+          text: error.response?.data?.message || "Something went wrong",
+          icon: "error",
+          confirmButtonText: "Ok",
+        });
         console.log(error);
       });
   };
@@ -278,6 +291,12 @@ function Users() {
       })
       .catch((error) => {
         setShowLoader(false);
+        Swal.fire({
+          title: "Error!",
+          text: error.response?.data?.message || "Something went wrong",
+          icon: "error",
+          confirmButtonText: "Ok",
+        });
         console.log(error);
       });
   };
@@ -305,11 +324,20 @@ function Users() {
 
           <div className="row">
             <div className="col-lg-12">
-              <div className="card" id="ticketsList">
+              <div className="card">
                 <div className="card-header border-0">
                   <div className="d-flex align-items-center">
                     <h5 className="card-title mb-0 flex-grow-1">
-                      {/* Dispatcher */}
+                      <div className="col-md-6">
+                        <input
+                          className="form-control"
+                          placeholder="Search by name or mobile"
+                          onChange={(e) => {
+                            setQuery(e.target.value);
+                            setCurrentPage(1);
+                          }}
+                        />
+                      </div>
                     </h5>
                     <div className="flex-shrink-0">
                       <button
@@ -350,7 +378,7 @@ function Users() {
                           dispatchers.length > 0 ? (
                             dispatchers.map((dispatcher, index) => (
                               <tr key={dispatcher._id}>
-                                <td>{index + 1}</td>
+                                <td>{(currentPage - 1) * 10 + index + 1}</td>
                                 <td>{dispatcher.name}</td>
                                 <td>{dispatcher.username}</td>
                                 <td>{dispatcher.email}</td>
@@ -418,6 +446,13 @@ function Users() {
                         )}
                       </tbody>
                     </table>
+                    {totalPages > 1 && (
+                      <Pagination
+                        totalPages={totalPages}
+                        currentPage={currentPage}
+                        setCurrentPage={setCurrentPage}
+                      />
+                    )}
                   </div>
                 </div>
               </div>

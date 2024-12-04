@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 
 const MultiLocation = ({ locations, open }) => {
-  const defaultZoom = 12; // Adjust as needed
+  const defaultZoom = 12; // Default zoom level
 
   // Custom icon
   const customIcon = L.icon({
@@ -20,34 +20,37 @@ const MultiLocation = ({ locations, open }) => {
     const map = useMap();
 
     useEffect(() => {
-      if (open && locations.length > 0) {
-        const validLocations = locations.filter(
-          (loc) => loc.lat !== undefined && loc.lng !== undefined
+      if (open && validLocations.length > 0) {
+        const bounds = L.latLngBounds(
+          validLocations.map((loc) => [loc.latitude, loc.longitude])
         );
-
-        if (validLocations.length > 0) {
-          const bounds = L.latLngBounds(
-            validLocations.map((loc) => [loc.lat, loc.lng])
-          );
-          map.fitBounds(bounds); // Fit map to markers
-        }
+        map.fitBounds(bounds); // Adjust the view to fit all markers
       }
-    }, [open, locations, map]);
+    }, [open, validLocations, map]);
 
     return null;
   };
 
-  // Filter out invalid locations before rendering
+  // Filter valid locations (latitude and longitude must not be blank)
   const validLocations = locations.filter(
-    (loc) => loc.latitude !== undefined && loc.longitude !== undefined
+    (loc) =>
+      loc.latitude !== undefined &&
+      loc.longitude !== undefined &&
+      loc.latitude !== null &&
+      loc.longitude !== null &&
+      loc.latitude !== "" &&
+      loc.longitude !== ""
   );
-  for (let i = 0; i < locations.length; i++) {
-    console.log(locations[i].latitude, locations[i].longitude);
-  }
+
+  // Determine the center
+  const center =
+    validLocations.length > 0
+      ? [validLocations[0].latitude, validLocations[0].longitude]
+      : [0, 0]; // Fallback to [0, 0] if no valid locations exist
 
   return validLocations.length > 0 ? (
     <MapContainer
-      center={[validLocations[0].latitude, validLocations[0].longitude]}
+      center={center}
       zoom={defaultZoom}
       style={{ height: "400px", width: "100%" }}
     >

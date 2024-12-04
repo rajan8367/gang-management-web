@@ -136,6 +136,12 @@ function RoleMaster() {
       })
       .catch((error) => {
         setShowLoader(false);
+        Swal.fire({
+          title: "Error!",
+          text: error.response?.data?.message || "Something went wrong",
+          icon: "error",
+          confirmButtonText: "Ok",
+        });
         console.error("Error adding Role:", error);
       });
   };
@@ -181,6 +187,12 @@ function RoleMaster() {
       })
       .catch((error) => {
         setShowLoader(false);
+        Swal.fire({
+          title: "Error!",
+          text: error.response?.data?.message || "Something went wrong",
+          icon: "error",
+          confirmButtonText: "Ok",
+        });
         console.error("Error updating Role:", error);
       });
   };

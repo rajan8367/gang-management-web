@@ -21,6 +21,7 @@ import EscaltionMaster from "./Pages/Private/EscalationMatrix";
 import InventoryList from "./Pages/Private/InventoryList";
 import Users from "./Pages/Private/UserList";
 import VanList from "./Pages/Private/VanList";
+import ComplaintInfo from "./Pages/public/ComplaintInfo";
 
 function App() {
   const { pathname } = useLocation();
@@ -190,6 +191,16 @@ function App() {
             <>
               <PageTitle title="Van List | Field Force Management" />
               <VanList />
+            </>
+          }
+        />
+
+        <Route
+          path="/complaint-info/:complaintId"
+          element={
+            <>
+              <PageTitle title="Complaint Info | Field Force Management" />
+              <ComplaintInfo />
             </>
           }
         />

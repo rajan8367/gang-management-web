@@ -205,7 +205,7 @@ function Sidebar() {
                     <span data-key="t-apps">Role Master</span>
                   </Link>
                 </li> */}
-                <li className="nav-item">
+                {/* <li className="nav-item">
                   <Link
                     to="/escalation-matrix"
                     className={`${
@@ -217,7 +217,7 @@ function Sidebar() {
                     <i className="ri-timer-line"></i>
                     <span data-key="t-apps">Escalation Matrix</span>
                   </Link>
-                </li>
+                </li> */}
                 <li className="nav-item">
                   <Link
                     to="/gang-list"

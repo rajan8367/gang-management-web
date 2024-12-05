@@ -952,11 +952,20 @@ function Dashboard() {
                                       <button
                                         className="btn btn-primary px-1 py-0"
                                         onClick={() => {
-                                          setLocation({
-                                            lat: complaint?.consumerLat,
-                                            long: complaint?.consumerLon,
-                                          });
-                                          setOpenMap(true);
+                                          if (
+                                            complaint.complaintStatus !== "Open"
+                                          ) {
+                                            setLocation({
+                                              lat: complaint?.consumerLat,
+                                              long: complaint?.consumerLon,
+                                            });
+                                            setOpenMap(true);
+                                          } else {
+                                            navigate(
+                                              "/complaint-info/" +
+                                                complaint?.complaintID
+                                            );
+                                          }
                                         }}
                                       >
                                         <i className="ri-map-pin-line"></i>

@@ -66,7 +66,7 @@ const MultiLocation = ({ locations, open }) => {
           icon={customIcon}
         >
           <Popup>
-            {location.gangName},<br />
+            {location.gangName || location?.vname},<br />
             {location?.gangCategoryID?.categoryName}
           </Popup>
         </Marker>

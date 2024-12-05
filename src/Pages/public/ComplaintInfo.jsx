@@ -119,7 +119,7 @@ function ComplaintInfo() {
   }
 
   return (
-    <div className="container-fluid mt-4">
+    <div className="container-fluid mt-2">
       <div className="row">
         {/* Left Panel */}
         <div
@@ -165,6 +165,10 @@ function ComplaintInfo() {
           <p>
             <strong>1912 Complaint Remark:</strong>{" "}
             {complaintData?.remarks || "N/A"}
+          </p>
+          <p>
+            <strong>Complaint Acknowledged:</strong>{" "}
+            {complaintData?.isAcknowledged === "1" ? "Yes" : "No"}
           </p>
 
           <h4 className="mt-4 text-white">Gang Info</h4>

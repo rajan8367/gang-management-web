@@ -7,6 +7,9 @@ import Loader from "../../Component/Loader";
 import Slide from "@mui/material/Slide";
 import { Link } from "react-router-dom";
 import Pagination from "./../../Component/Pagination";
+import { Dialog, DialogContent, DialogTitle } from "@mui/material";
+import MapComponent from "../../Component/MapComponent";
+import MultiLocation from "../../Component/MultiLocations";
 
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -20,7 +23,13 @@ function VanList() {
   const [filtered, setFiltered] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-
+  const [multiLocation, setMultiLocation] = useState(false);
+  const [vanMap, setVanMap] = useState(false);
+  const [alterList, setAlterList] = useState([]);
+  const [location, setLocation] = useState({
+    lat: "",
+    long: "",
+  });
   useEffect(() => {
     if (token !== "") {
       const searchVan = setTimeout(() => {
@@ -45,8 +54,18 @@ function VanList() {
       })
       .then((response) => {
         setTotalPages(response?.data?.pagination.totalPages);
-        setVanList(response.data?.data || []);
-        setFiltered(response.data?.data || []);
+        const tempArr = response.data?.data;
+        const updatedData = tempArr.map((item) => {
+          const { lat, lngt, ...rest } = item;
+          return {
+            ...rest,
+            latitude: lat,
+            longitude: lngt,
+          };
+        });
+        setAlterList(updatedData);
+        setVanList(tempArr || []);
+        setFiltered(tempArr || []);
         setShowLoader(false);
       })
       .catch((error) => {
@@ -83,15 +102,27 @@ function VanList() {
             <div className="col-lg-12">
               <div className="card">
                 <div className="card-header border-0">
-                  <div className="col-md-4">
-                    <input
-                      className="form-control"
-                      onChange={(e) => {
-                        setQuery(e.target.value);
-                        setCurrentPage(1);
-                      }}
-                      placeholder="Search..."
-                    />
+                  <div className="d-flex justify-content-between">
+                    <div className="flex-grow-1" style={{ maxWidth: "40%" }}>
+                      <input
+                        className="form-control"
+                        placeholder="Search by name or mobile"
+                        onChange={(e) => {
+                          setQuery(e.target.value);
+                          setCurrentPage(1);
+                        }}
+                      />
+                    </div>
+                    <div className="flex-shrink-0 ms-2">
+                      <button
+                        className="btn btn-success add-btn"
+                        onClick={() => {
+                          setMultiLocation(true);
+                        }}
+                      >
+                        <i className="ri-user-location-fill"></i> Vans Location
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -116,6 +147,21 @@ function VanList() {
                               <td>{role.vname}</td>
                               <td>
                                 {role.lat}, {role.lngt}
+                                {role.lat !== "" && role.lngt !== "" && (
+                                  <button
+                                    className="btn btn-primary px-1 py-0"
+                                    style={{ display: "block" }}
+                                    onClick={() => {
+                                      setLocation({
+                                        lat: role.lat,
+                                        long: role.lngt,
+                                      });
+                                      setVanMap(true);
+                                    }}
+                                  >
+                                    <i className="ri-map-pin-line"></i>
+                                  </button>
+                                )}
                               </td>
                               <td>
                                 {formatDate(role.updatedAt)} at{" "}
@@ -146,6 +192,30 @@ function VanList() {
           </div>
         </div>
       </div>
+      <Dialog
+        open={vanMap || multiLocation}
+        TransitionComponent={Transition}
+        keepMounted
+        onClose={() => (vanMap ? setVanMap(false) : setMultiLocation(false))}
+        fullWidth
+        maxWidth="md"
+        sx={{ zIndex: 99999 }}
+      >
+        <DialogTitle>
+          {vanMap ? "Van Location" : "All Vans Location"}
+        </DialogTitle>
+        <DialogContent>
+          {vanMap ? (
+            <MapComponent
+              lat={location.lat}
+              open={vanMap}
+              lng={location.long}
+            />
+          ) : (
+            <MultiLocation open={multiLocation} locations={alterList} />
+          )}
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }

@@ -146,15 +146,6 @@ function Users() {
       });
       return;
     }
-    if (dispatcherData.email === "") {
-      Swal.fire({
-        title: "Error!",
-        text: "Enter Email Id",
-        icon: "error",
-        confirmButtonText: "Ok",
-      });
-      return;
-    }
     if (dispatcherData.phone === "") {
       Swal.fire({
         title: "Error!",
@@ -228,15 +219,6 @@ function Users() {
       Swal.fire({
         title: "Error!",
         text: "Enter Username",
-        icon: "error",
-        confirmButtonText: "Ok",
-      });
-      return;
-    }
-    if (dispatcherData.email === "") {
-      Swal.fire({
-        title: "Error!",
-        text: "Enter Email Id",
         icon: "error",
         confirmButtonText: "Ok",
       });

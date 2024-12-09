@@ -26,6 +26,7 @@ function Users() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [query, setQuery] = useState("");
+  const [categoryList, setCategoryList] = useState(null);
   const [dispatcherData, setDispatcherData] = useState({
     id: "",
     name: "",
@@ -34,6 +35,7 @@ function Users() {
     role: "user",
     phone: "",
     escalateTime: 0,
+    memberOf: [],
   });
   useEffect(() => {
     if (token !== "") {
@@ -42,8 +44,28 @@ function Users() {
   }, [token, currentPage, query]);
   const handleClickOpen = () => {
     setOpen(true);
+    fetchGangCategory();
   };
-
+  const fetchGangCategory = () => {
+    setShowLoader(true);
+    const data = {};
+    axios
+      .post(`${apiUrl}list-gangCategory`, data, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        console.log("Response:", response);
+        setCategoryList(response.data?.data);
+        setShowLoader(false);
+      })
+      .catch((error) => {
+        setShowLoader(false);
+        console.log(error);
+      });
+  };
   const handleClose = () => {
     setOpen(false);
     setDispatcherData((prevItem) => ({
@@ -55,6 +77,7 @@ function Users() {
       phone: "",
       role: "user",
       escalateTime: 0,
+      memberOf: [],
     }));
   };
 
@@ -120,10 +143,22 @@ function Users() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setDispatcherData((prevItem) => ({
-      ...prevItem,
-      [name]: value,
-    }));
+
+    if (name === "memberOf") {
+      const selectedOptions = Array.from(
+        e.target.selectedOptions,
+        (option) => option.value
+      );
+      setDispatcherData((prevItem) => ({
+        ...prevItem,
+        [name]: selectedOptions,
+      }));
+    } else {
+      setDispatcherData((prevItem) => ({
+        ...prevItem,
+        [name]: value,
+      }));
+    }
   };
 
   const addDispatcher = (e) => {
@@ -163,6 +198,7 @@ function Users() {
       phone: dispatcherData.phone,
       role: dispatcherData.role,
       esclateTime: dispatcherData.escalateTime,
+      memberOf: dispatcherData.memberOf,
     };
     axios
       .post(`${apiUrl}register`, data, {
@@ -188,6 +224,7 @@ function Users() {
           role: "user",
           phone: "",
           escalateTime: 0,
+          memberOf: [],
         });
         setOpen(false);
         fetchUser();
@@ -242,6 +279,7 @@ function Users() {
       role: dispatcherData.role,
       id: dispatcherData.id,
       esclateTime: dispatcherData.escalateTime,
+      memberOf: dispatcherData.memberOf,
     };
     axios
       .put(`${apiUrl}user-update`, data, {
@@ -267,6 +305,7 @@ function Users() {
           role: "user",
           phone: "",
           escalateTime: 0,
+          memberOf: [],
         });
         setOpen(false);
         fetchUser();
@@ -346,8 +385,8 @@ function Users() {
                           </th>
                           <th>Name</th>
                           <th>Username</th>
-                          <th>Email</th>
                           <th>Phone</th>
+                          <th>Member Of</th>
                           <th>Escalation Time(in Hrs.)</th>
 
                           <th style={{ width: 120 }} align="center">
@@ -363,8 +402,15 @@ function Users() {
                                 <td>{(currentPage - 1) * 10 + index + 1}</td>
                                 <td>{dispatcher.name}</td>
                                 <td>{dispatcher.username}</td>
-                                <td>{dispatcher.email}</td>
                                 <td>{dispatcher.phone}</td>
+                                <td>
+                                  {dispatcher?.memberOf?.length > 0 &&
+                                    dispatcher?.memberOf.map((member) => (
+                                      <p className="mb-0" key={member}>
+                                        {member}
+                                      </p>
+                                    ))}
+                                </td>
                                 <td>{dispatcher.esclateTime}</td>
 
                                 <td align="center">
@@ -380,6 +426,7 @@ function Users() {
                                         role: dispatcher?.role,
                                         phone: dispatcher?.phone,
                                         escalateTime: dispatcher?.esclateTime,
+                                        memberOf: dispatcher?.memberOf,
                                       });
                                       handleClickOpen();
                                     }}
@@ -445,7 +492,6 @@ function Users() {
             TransitionComponent={Transition}
             keepMounted
             onClose={handleClose}
-            aria-describedby="alert-dialog-slide-description"
           >
             <DialogTitle>{mode === "add" ? "Add" : "Update"} User</DialogTitle>
             <DialogContent>
@@ -477,6 +523,27 @@ function Users() {
                         value={dispatcherData?.username}
                         onChange={handleChange}
                       />
+                    </div>
+                    <div className="col-lg-6">
+                      <label className="form-label">Member Of</label>
+                      <select
+                        onChange={handleChange}
+                        value={dispatcherData.memberOf}
+                        name="memberOf"
+                        className="form-control"
+                        multiple
+                        style={{ height: "150px" }}
+                      >
+                        <option disabled value="">
+                          -- Select Categories --
+                        </option>
+                        {categoryList &&
+                          categoryList.map((cat) => (
+                            <option key={cat._id} value={cat.categoryName}>
+                              {cat.categoryName}
+                            </option>
+                          ))}
+                      </select>
                     </div>
                     <div className="col-lg-6">
                       <label className="form-label">Email Id</label>

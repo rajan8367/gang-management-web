@@ -32,7 +32,10 @@ function ComplaintInfo() {
   const [toastOpen, setToastOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastSeverity, setToastSeverity] = useState("success");
-
+  const isMobileDevice = () => {
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    return /android|iphone|ipad|iPod/i.test(userAgent);
+  };
   useEffect(() => {
     if (complaintId) {
       fetchComplaint();
@@ -49,22 +52,83 @@ function ComplaintInfo() {
           "Content-Type": "application/json",
         },
       });
-      setComplaintData(response?.data?.complaint);
-      setId(response?.data?.complaint?._id);
+      const complaintData = response?.data?.complaint;
+      setComplaintData(complaintData);
+      setId(complaintData?._id);
+
+      if (!(complaintData?.consumerLat && complaintData?.consumerLon)) {
+        Swal.fire({
+          title: "Consumer's Location not exist!",
+          text: "Please drag the marker on map to set consumer's location",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#405189",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Yes, set it!",
+        }).then((result) => {
+          if (result.isConfirmed && isMobileDevice()) {
+            fetchDeviceLocation(complaintData?._id); // Fetch device location only if on mobile
+          } else {
+            // Set default location to Kanpur for desktop
+            setComplaintData((prev) => ({
+              ...prev,
+              consumerLat: 26.4499,
+              consumerLon: 80.3319,
+            }));
+          }
+        });
+      }
       setGangData(response?.data?.gangInfo);
     } catch (err) {
-      setError(
-        err.message || "An error occurred while fetching complaint data."
-      );
+      Swal.fire({
+        title: "Error",
+        text: err.message || "An error occurred while fetching complaint data.",
+        icon: "warning",
+        confirmButtonColor: "#405189",
+        confirmButtonText: "Ok",
+      });
     } finally {
       setShowLoader(false);
     }
   };
 
-  const updateConsumerLocation = async (lat, lon) => {
+  const fetchDeviceLocation = (id) => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          updateConsumerLocation(latitude, longitude, id);
+          setComplaintData((prev) => ({
+            ...prev,
+            consumerLat: latitude,
+            consumerLon: longitude,
+          }));
+        },
+        (error) => {
+          setToastSeverity("error");
+          setToastMessage(
+            "Unable to fetch device location. Please enable location services."
+          );
+          setToastOpen(true);
+        }
+      );
+    } else {
+      setToastSeverity("error");
+      setToastMessage("Geolocation is not supported by your browser.");
+      setToastOpen(true);
+    }
+  };
+
+  const updateConsumerLocation = async (lat, lon, complaint_id) => {
+    let complaintID = "";
+    if (!complaint_id) {
+      complaintID = id;
+    } else {
+      complaintID = complaint_id;
+    }
     try {
       const data = {
-        complaintID: id,
+        complaintID: complaintID,
         consumerLat: lat.toString(),
         consumerLon: lon.toString(),
       };
@@ -84,28 +148,6 @@ function ComplaintInfo() {
     }
   };
 
-  const handleMarkerDragEnd = (event) => {
-    const { lat, lng } = event.target.getLatLng();
-    Swal.fire({
-      title: "Update Location?",
-      text: "Do you want to update the consumer location?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#405189",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, update it!",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        updateConsumerLocation(lat, lng);
-        setComplaintData((prev) => ({
-          ...prev,
-          consumerLat: lat,
-          consumerLon: lng,
-        }));
-      }
-    });
-  };
-
   const handleCloseToast = () => {
     setToastOpen(false);
   };
@@ -121,71 +163,13 @@ function ComplaintInfo() {
   return (
     <div className="container-fluid mt-2">
       <div className="row">
-        {/* Left Panel */}
+        {/* Right Panel */}
         <div
-          className="col-md-4"
+          className="col-md-8 order-1 order-md-2"
           style={{
-            backgroundColor: "#405189",
-            color: "#fff",
-            padding: "20px",
-            borderRadius: "10px",
-            minHeight: "95vh",
+            marginBottom: "20px",
           }}
         >
-          <h4 className="text-white">Consumer Info</h4>
-          <hr style={{ borderTop: "1px solid #fff" }} />
-          <p>
-            <strong>Account No.:</strong>{" "}
-            {complaintData?.consumerAccountNo || "N/A"}
-          </p>
-          <p>
-            <strong>Name:</strong> {complaintData?.consumerName || "N/A"}
-          </p>
-          <p>
-            <strong>Mobile No.:</strong>{" "}
-            {complaintData?.consumerMobile || "N/A"}
-          </p>
-          <p>
-            <strong>Address:</strong> {complaintData?.consumerAddress || "N/A"}
-          </p>
-
-          <h4 className="mt-4 text-white">Complaint Info</h4>
-          <hr style={{ borderTop: "1px solid #fff" }} />
-          <p>
-            <strong>Complaint Status:</strong>{" "}
-            {complaintData?.complaintStatus || "N/A"}
-          </p>
-          <p>
-            <strong>Complaint ID:</strong> {complaintData?.complaintID || "N/A"}
-          </p>
-          <p>
-            <strong>Complaint Type:</strong>{" "}
-            {complaintData?.complaintType || "N/A"}
-          </p>
-          <p>
-            <strong>1912 Complaint Remark:</strong>{" "}
-            {complaintData?.remarks || "N/A"}
-          </p>
-          <p>
-            <strong>Complaint Acknowledged:</strong>{" "}
-            {complaintData?.isAcknowledged === "1" ? "Yes" : "No"}
-          </p>
-
-          <h4 className="mt-4 text-white">Gang Info</h4>
-          <hr style={{ borderTop: "1px solid #fff" }} />
-          <p>
-            <strong>Gang Category:</strong> {gangData?.gangCategory || "N/A"}
-          </p>
-          <p>
-            <strong>Gang Name:</strong> {gangData?.gangName || "N/A"}
-          </p>
-          <p>
-            <strong>Contact:</strong> {gangData?.gangMobile || "N/A"}
-          </p>
-        </div>
-
-        {/* Right Panel */}
-        <div className="col-md-8">
           <div
             className="card shadow"
             style={{
@@ -202,14 +186,18 @@ function ComplaintInfo() {
                 textAlign: "center",
               }}
             >
-              <h5 className="mb-0 text-white">Complaint Location Map</h5>
+              <h5 className="mb-0 text-white">
+                {!(complaintData?.consumerLat && complaintData?.consumerLon)
+                  ? "Drag the marker to set consumer location"
+                  : "Complaint Location Map"}
+              </h5>
             </div>
 
             <div
               className="card-body"
               style={{
                 padding: 0,
-                height: "540px",
+                height: "450px",
                 backgroundColor: "#f4f4f4",
               }}
             >
@@ -232,34 +220,23 @@ function ComplaintInfo() {
                       ? [complaintData?.consumerLat, complaintData?.consumerLon]
                       : [26.4499, 80.3319] // Default marker position at Kanpur
                   }
-                  draggable
+                  draggable={complaintData?.complaintStatus === "Open"}
                   icon={customIcon}
                   eventHandlers={{
                     dragend: (event) => {
                       const { lat, lng } = event.target.getLatLng();
-                      Swal.fire({
-                        title: "Set Location?",
-                        text: "Do you want to set this as the consumer's location?",
-                        icon: "question",
-                        showCancelButton: true,
-                        confirmButtonColor: "#405189",
-                        cancelButtonColor: "#d33",
-                        confirmButtonText: "Yes, set it!",
-                      }).then((result) => {
-                        if (result.isConfirmed) {
-                          updateConsumerLocation(lat, lng);
-                          setComplaintData((prev) => ({
-                            ...prev,
-                            consumerLat: lat,
-                            consumerLon: lng,
-                          }));
-                        }
-                      });
+                      setComplaintData((prev) => ({
+                        ...prev,
+                        consumerLat: lat,
+                        consumerLon: lng,
+                      }));
                     },
                   }}
                 >
                   <Popup>
-                    Drag to set consumer location.
+                    {complaintData?.complaintStatus === "Open"
+                      ? "Drag to set consumer location."
+                      : "Consumer location."}
                     {!(
                       complaintData?.consumerLat && complaintData?.consumerLon
                     ) && " (Default location: Kanpur)"}
@@ -269,6 +246,7 @@ function ComplaintInfo() {
                   <Marker
                     position={[gangData?.latitude, gangData?.longitude]}
                     icon={customIcon}
+                    draggable={false}
                   >
                     <Popup>Gang Location</Popup>
                   </Marker>
@@ -276,10 +254,113 @@ function ComplaintInfo() {
               </MapContainer>
             </div>
           </div>
+          {complaintData?.complaintStatus === "Open" && (
+            <>
+              <h5>
+                "Please move the map marker to your exact location and click the
+                'Save Location' button to update your location. This will help
+                the maintenance team reach you quickly to resolve the issue."
+              </h5>
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  Swal.fire({
+                    title: "Set Location?",
+                    text: "Do you want to set this as the consumer's location?",
+                    icon: "question",
+                    showCancelButton: true,
+                    confirmButtonColor: "#405189",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Yes, set it!",
+                  }).then((result) => {
+                    if (result.isConfirmed) {
+                      updateConsumerLocation(
+                        complaintData.consumerLat,
+                        complaintData?.consumerLon
+                      );
+                    }
+                  });
+                }}
+              >
+                Save Location
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Left Panel */}
+        <div
+          className="col-md-4 order-2 order-md-1"
+          style={{
+            backgroundColor: "#405189",
+            color: "#fff",
+            padding: "20px",
+            borderRadius: "10px",
+            minHeight: "95vh",
+          }}
+        >
+          <h4 className="text-white">
+            <strong>Complaint Status: </strong>
+            {complaintData?.complaintStatus === "Open"
+              ? "Your complaint is received and under review."
+              : complaintData?.complaintStatus === "Assigned"
+              ? "Your complaint is assigned to the maintenance team."
+              : complaintData?.complaintStatus === "InProgress"
+              ? "The maintenance team is working on your complaint."
+              : complaintData?.complaintStatus === "OnHold"
+              ? "Your complaint is temporarily delayed due to dependencies."
+              : "Your complaint is resolved. Raise a new one if needed."}
+          </h4>
+          <hr style={{ borderTop: "1px solid #fff" }} />
+
+          <p>
+            <strong>Complaint Reference Number:</strong>{" "}
+            {complaintData?.complaintID || "N/A"}
+          </p>
+          <p>
+            <strong>Type of Issue:</strong>{" "}
+            {complaintData?.complaintType || "N/A"}
+          </p>
+          <p>
+            <strong>Reported Problem:</strong> {complaintData?.remarks || "N/A"}
+          </p>
+          <p>
+            <strong>Acknowledged by 1912 Helpline:</strong>{" "}
+            {complaintData?.isAcknowledged === "1"
+              ? "Yes - Your complaint has been acknowledged by the helpline."
+              : "No - Your complaint has not yet been acknowledged by the helpline."}
+          </p>
+          <h4 className="text-white">Consumer Info</h4>
+          <hr style={{ borderTop: "1px solid #fff" }} />
+          <p>
+            <strong>Account No.:</strong>{" "}
+            {complaintData?.consumerAccountNo || "N/A"}
+          </p>
+          <p>
+            <strong>Name:</strong> {complaintData?.consumerName || "N/A"}
+          </p>
+          <p>
+            <strong>Mobile No.:</strong>{" "}
+            {complaintData?.consumerMobile || "N/A"}
+          </p>
+          <p>
+            <strong>Address:</strong> {complaintData?.consumerAddress || "N/A"}
+          </p>
+
+          <h4 className="mt-4 text-white">Gang Info</h4>
+          <hr style={{ borderTop: "1px solid #fff" }} />
+          <p>
+            <strong>Gang Category:</strong> {gangData?.gangCategory || "N/A"}
+          </p>
+          <p>
+            <strong>Gang Name:</strong> {gangData?.gangName || "N/A"}
+          </p>
+          <p>
+            <strong>Contact:</strong> {gangData?.gangMobile || "N/A"}
+          </p>
         </div>
       </div>
-
-      {/* MUI Toast */}
+      ;{/* MUI Toast */}
       <Snackbar
         open={toastOpen}
         autoHideDuration={3000}

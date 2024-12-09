@@ -51,12 +51,14 @@ function Dashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [startDate, endDate] = dateRange;
+  const [categoryList, setCategoryList] = useState(null);
   const [filterData, setFilterData] = useState({
     registrationDate: "",
     fromDate: "",
     toDate: "",
     complaintStatus: "",
     complaintNo: "",
+    complaintCategory: "",
   });
   const [location, setLocation] = useState({
     lat: "",
@@ -69,11 +71,31 @@ function Dashboard() {
     // Format the date
     return date.format("DD MMM YY");
   }
-
+  const fetchGangCategory = () => {
+    setShowLoader(true);
+    const data = {};
+    axios
+      .post(`${apiUrl}list-gangCategory`, data, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        console.log("Response:", response);
+        setCategoryList(response.data?.data);
+        setShowLoader(false);
+      })
+      .catch((error) => {
+        setShowLoader(false);
+        console.log(error);
+      });
+  };
   useEffect(() => {
     setGreet(getGreeting());
     if (token !== "") {
       fetchComplaint();
+      fetchGangCategory();
     }
   }, [token, filterData.complaintStatus, currentPage]);
 
@@ -84,6 +106,7 @@ function Dashboard() {
       fromDate: filterData.fromDate,
       toDate: filterData.toDate,
       complaintStatus: filterData.complaintStatus,
+      complaintCategory: filterData.complaintCategory,
       complaintID: "",
       complaintNo: filterData.complaintNo,
       page: currentPage,
@@ -365,6 +388,24 @@ function Dashboard() {
                       <div className="mt-3 mt-lg-0">
                         <form action="#">
                           <div className="row g-3 mb-0 align-items-center">
+                            <div className="col-sm-auto">
+                              <select
+                                className="form-select shadow"
+                                onChange={handleChange}
+                                name="complaintCategory"
+                                value={filterData.complaintCategory}
+                              >
+                                <option value="">All Complaint Type</option>
+                                {categoryList?.map((category) => (
+                                  <option
+                                    key={category._id}
+                                    value={category.categoryName}
+                                  >
+                                    {category.categoryName}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
                             <div className="col-sm-auto">
                               <DatePicker
                                 selectsRange={true}
@@ -969,6 +1010,10 @@ function Dashboard() {
                                         }}
                                       >
                                         <i className="ri-map-pin-line"></i>
+                                        {complaint?.consumerLat &&
+                                        complaint?.consumerLon
+                                          ? " View Location"
+                                          : " Set Location"}
                                       </button>
                                     </td>
                                     <td className="text-nowrap">
@@ -987,7 +1032,9 @@ function Dashboard() {
                                       </td>
                                     )}
                                     <td>
-                                      {complaint.complaintStatus === "Open" ||
+                                      {(complaint?.consumerLat &&
+                                        complaint?.consumerLon &&
+                                        complaint.complaintStatus === "Open") ||
                                       complaint.complaintStatus ===
                                         "Esclate" ? (
                                         <button

@@ -2,22 +2,36 @@ import Layout from "../../Component/Layout";
 import googlemapicon from "./../../assets/images/google-map-icon.png";
 import avatar from "./../../assets/images/users/avatar-8.jpg";
 import avatar7 from "./../../assets/images/users/avatar-7.jpg";
-import { useEffect, useState } from "react";
+import { forwardRef, useEffect, useState } from "react";
 import "./../../assets/css/swiper-bundle.min.css";
 import SimpleBar from "simplebar-react";
 import "simplebar-react/dist/simplebar.min.css";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useUserContext } from "../../hooks/userContext";
 import axios from "axios";
 import { apiUrl, formatDate } from "../../Constant";
 import "leaflet/dist/leaflet.css";
+import { Dialog, DialogContent, DialogTitle, Slide } from "@mui/material";
+import MapComponent from "../../Component/MapComponent";
+import Swal from "sweetalert2";
+
+const Transition = forwardRef(function Transition(props, ref) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
 
 function ComplaintDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { token } = useUserContext();
   const [tab, setTab] = useState(1);
   const [showLoader, setShowLoader] = useState(false);
   const [complaintData, setComplaintData] = useState(null);
+
+  const [openMap, setOpenMap] = useState(false);
+  const [location, setLocation] = useState({
+    lat: "",
+    long: "",
+  });
   const [address, setAddress] = useState("");
   useEffect(() => {
     if (token !== "") {
@@ -168,7 +182,36 @@ function ComplaintDetail() {
                         src={googlemapicon}
                         alt="Clieck to View on Map"
                         height="20"
-                        className="rounded"
+                        className="rounded cursor-pointer"
+                        onClick={() => {
+                          if (
+                            complaintData?.consumerLat &&
+                            complaintData?.consumerLon
+                          ) {
+                            setLocation({
+                              lat: complaintData?.consumerLat,
+                              long: complaintData?.consumerLon,
+                            });
+                            setOpenMap(true);
+                          } else {
+                            Swal.fire({
+                              title: "Site Location not added yet",
+                              text: "Do you want to set this as the consumer's location?",
+                              icon: "question",
+                              showCancelButton: true,
+                              confirmButtonColor: "#405189",
+                              cancelButtonColor: "#d33",
+                              confirmButtonText: "Yes, set it!",
+                            }).then((result) => {
+                              if (result.isConfirmed) {
+                                navigate(
+                                  "/complaint-info/" +
+                                    complaintData?.complaintID
+                                );
+                              }
+                            });
+                          }
+                        }}
                       />
                     </h6>
                   </div>
@@ -262,7 +305,9 @@ function ComplaintDetail() {
                     <div className="row g-2  mb-2">
                       <table className="table align-middle table-nowrap mb-0">
                         <thead>
-                          <th>Checks</th>
+                          <tr>
+                            <th>Checks</th>
+                          </tr>
                         </thead>
                         <tbody>
                           {complaintData?.safetyChecks.length > 0 &&
@@ -289,8 +334,10 @@ function ComplaintDetail() {
                     <div className="row g-2  mb-2">
                       <table className="table align-middle table-nowrap mb-0">
                         <thead>
-                          <th>product Name</th>
-                          <th>Quantity</th>
+                          <tr>
+                            <th>product Name</th>
+                            <th>Quantity</th>
+                          </tr>
                         </thead>
                         <tbody>
                           {complaintData?.consumedItems.length > 0 &&
@@ -828,6 +875,20 @@ function ComplaintDetail() {
           </div>
         </div>
       </div>
+      <Dialog
+        open={openMap}
+        TransitionComponent={Transition}
+        keepMounted
+        onClose={() => setOpenMap(false)}
+        fullWidth
+        maxWidth="md"
+        sx={{ zIndex: 99999 }}
+      >
+        <DialogTitle>Site Location</DialogTitle>
+        <DialogContent>
+          <MapComponent lat={location.lat} open={openMap} lng={location.long} />
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }

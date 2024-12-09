@@ -22,6 +22,7 @@ import InventoryList from "./Pages/Private/InventoryList";
 import Users from "./Pages/Private/UserList";
 import VanList from "./Pages/Private/VanList";
 import ComplaintInfo from "./Pages/public/ComplaintInfo";
+import ChangePassword from "./Pages/Private/ChangePassword";
 
 function App() {
   const { pathname } = useLocation();
@@ -201,6 +202,15 @@ function App() {
             <>
               <PageTitle title="Complaint Info | Field Force Management" />
               <ComplaintInfo />
+            </>
+          }
+        />
+        <Route
+          path="/change-password"
+          element={
+            <>
+              <PageTitle title="Change Password | Field Force Management" />
+              <ChangePassword />
             </>
           }
         />

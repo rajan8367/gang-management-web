@@ -911,6 +911,7 @@ function GangList() {
                           name="gangName"
                           value={gangData.gangName}
                           onChange={handleChange}
+                          autoComplete="off"
                         />
                       </div>
                     </div>
@@ -925,6 +926,7 @@ function GangList() {
                           name="gangMobile"
                           value={gangData.gangMobile}
                           onChange={handleChange}
+                          autoComplete="off"
                         />
                       </div>
                     </div>
@@ -1023,6 +1025,7 @@ function GangList() {
                         name="latitude"
                         value={gangData.latitude}
                         onChange={handleChange}
+                        autoComplete="off"
                       />
                     </div>
                     <div className="col-lg-4">
@@ -1034,6 +1037,7 @@ function GangList() {
                         name="longitude"
                         value={gangData.longitude}
                         onChange={handleChange}
+                        autoComplete="off"
                       />
                     </div>
                     <div className="col-lg-4">

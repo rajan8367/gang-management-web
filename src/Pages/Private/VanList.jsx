@@ -30,8 +30,10 @@ function VanList() {
     lat: "",
     long: "",
   });
+  const [allLocation, setAllLocation] = useState([]);
   useEffect(() => {
     if (token !== "") {
+      fetchLocation();
       const searchVan = setTimeout(() => {
         fetchVan();
       }, 500);
@@ -67,6 +69,34 @@ function VanList() {
         setVanList(tempArr || []);
         setFiltered(tempArr || []);
         setShowLoader(false);
+      })
+      .catch((error) => {
+        setShowLoader(false);
+        console.error("Error fetching Role:", error);
+      });
+  };
+  const fetchLocation = () => {
+    setShowLoader(true);
+    const data = {};
+    axios
+      .post(`${apiUrl}/all-vandata`, data, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        //setTotalPages(response?.data?.pagination.totalPages);
+        const tempArr = response.data?.data;
+        const updatedData = tempArr.map((item) => {
+          const { lat, lngt, ...rest } = item;
+          return {
+            ...rest,
+            latitude: lat,
+            longitude: lngt,
+          };
+        });
+        setAllLocation(updatedData);
       })
       .catch((error) => {
         setShowLoader(false);
@@ -212,7 +242,7 @@ function VanList() {
               lng={location.long}
             />
           ) : (
-            <MultiLocation open={multiLocation} locations={alterList} />
+            <MultiLocation open={multiLocation} locations={allLocation} />
           )}
         </DialogContent>
       </Dialog>

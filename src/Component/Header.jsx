@@ -5,7 +5,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 function Header() {
   const { pathname } = useLocation();
-  const { user, setUser, setToken, userType, setUserType } = useUserContext();
+  const { user, setUser, setToken, userType, setUserType, setMenuOpen } =
+    useUserContext();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,7 +28,6 @@ function Header() {
   };
 
   //if (!loggedIn) return <Loader />;
-
   return (
     <div id="layout-wrapper">
       <header id="page-topbar">
@@ -37,7 +37,7 @@ function Header() {
               <button
                 type="button"
                 className="btn btn-sm px-3 fs-16 header-item vertical-menu-btn topnav-hamburger"
-                id="topnav-hamburger-icon"
+                onClick={() => setMenuOpen(true)}
               >
                 <span className="hamburger-icon">
                   <span></span>

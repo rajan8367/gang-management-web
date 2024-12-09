@@ -4,6 +4,7 @@ const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
   const [userType, setUserType] = useState("admin");
+  const [menuOpen, setMenuOpen] = useState(false);
   const [customMsg, setCustomMsg] = useState({
     isVisible: false,
     text: "",
@@ -32,6 +33,8 @@ export const AppProvider = ({ children }) => {
         setUser,
         token,
         setToken,
+        menuOpen,
+        setMenuOpen,
       }}
     >
       {children}

@@ -52,6 +52,7 @@ function Dashboard() {
   const [totalPages, setTotalPages] = useState(0);
   const [startDate, endDate] = dateRange;
   const [categoryList, setCategoryList] = useState(null);
+  const [filterOption, seFilterOption] = useState(false);
   const [filterData, setFilterData] = useState({
     registrationDate: "",
     fromDate: "",
@@ -97,7 +98,13 @@ function Dashboard() {
       fetchComplaint();
       fetchGangCategory();
     }
-  }, [token, filterData.complaintStatus, currentPage]);
+  }, [token, currentPage]);
+  useEffect(() => {
+    setCurrentPage(1);
+    if (token !== "") {
+      fetchComplaint();
+    }
+  }, [filterData.complaintStatus]);
 
   const fetchComplaint = () => {
     setShowLoader(true);
@@ -365,8 +372,12 @@ function Dashboard() {
         <div className="container-fluid">
           <div className="row">
             <div className="col-12">
-              <div className="page-title-box d-sm-flex align-items-center justify-content-between">
-                <h4 className="mb-sm-0">Dashboard</h4>
+              <div className="page-title-box d-flex align-items-center justify-content-between">
+                <h4 className="mb-sm-0">Dashboard </h4>
+                <i
+                  className="d-sm-none ri-equalizer-line"
+                  onClick={() => seFilterOption(true)}
+                ></i>
               </div>
             </div>
           </div>
@@ -385,7 +396,13 @@ function Dashboard() {
                           {greet}, {user?.DIVISION_NAME}!
                         </h4> */}
                       </div>
-                      <div className="mt-3 mt-lg-0">
+                      <div
+                        className={
+                          filterOption
+                            ? `mt-3 mt-lg-0 filterBox openFilter`
+                            : `mt-3 mt-lg-0 filterBox`
+                        }
+                      >
                         <form action="#">
                           <div className="row g-3 mb-0 align-items-center">
                             <div className="col-sm-auto">
@@ -451,9 +468,19 @@ function Dashboard() {
                               <button
                                 type="button"
                                 className="btn btn-primary shadow"
-                                onClick={() => fetchComplaint()}
+                                onClick={() => {
+                                  seFilterOption(false);
+                                  fetchComplaint();
+                                }}
                               >
                                 Apply
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-danger shadow ms-3 d-sm-none"
+                                onClick={() => seFilterOption(false)}
+                              >
+                                Cancel
                               </button>
                             </div>
                           </div>
@@ -463,11 +490,11 @@ function Dashboard() {
                   </div>
                 </div>
 
-                <div className="row">
+                <div className="row flex-nowrap overflow-auto">
                   {userType !== "dispatcher" ? (
                     <>
                       <div
-                        className="col-xl-2 col-md-6 cursor-pointer"
+                        className="col-xl-2 col-8 col-md-6 cursor-pointer"
                         onClick={() =>
                           setFilterData((prevData) => ({
                             ...prevData,
@@ -516,7 +543,7 @@ function Dashboard() {
                       </div>
 
                       <div
-                        className="col-xl-2 col-md-6"
+                        className="col-xl-2  col-8 col-md-6"
                         onClick={() =>
                           setFilterData((prevData) => ({
                             ...prevData,
@@ -563,7 +590,7 @@ function Dashboard() {
                       </div>
 
                       <div
-                        className={`col-xl-2 col-md-6 cursor-pointer`}
+                        className={`col-xl-2  col-8 col-md-6 cursor-pointer`}
                         onClick={() =>
                           setFilterData((prevData) => ({
                             ...prevData,
@@ -608,7 +635,7 @@ function Dashboard() {
                       </div>
 
                       <div
-                        className="col-xl-2 col-md-6 cursor-pointer"
+                        className="col-xl-2 col-8 col-md-6 cursor-pointer"
                         onClick={() =>
                           setFilterData((prevData) => ({
                             ...prevData,
@@ -658,7 +685,7 @@ function Dashboard() {
                       </div>
 
                       <div
-                        className={`col-xl-2 col-md-6 cursor-pointer`}
+                        className={`col-xl-2 col-8 col-md-6 cursor-pointer`}
                         onClick={() =>
                           setFilterData((prevData) => ({
                             ...prevData,
@@ -703,7 +730,7 @@ function Dashboard() {
                       </div>
 
                       <div
-                        className={`col-xl-2 col-md-6 cursor-pointer`}
+                        className={`col-xl-2 col-8 col-md-6 cursor-pointer`}
                         onClick={() =>
                           setFilterData((prevData) => ({
                             ...prevData,
@@ -750,7 +777,7 @@ function Dashboard() {
                   ) : (
                     <>
                       <div
-                        className="col-xl-3 col-md-6 cursor-pointer"
+                        className="col-xl-3 col-8 col-md-6 cursor-pointer"
                         onClick={() =>
                           setFilterData((prevData) => ({
                             ...prevData,
@@ -798,7 +825,7 @@ function Dashboard() {
                         </div>
                       </div>
                       <div
-                        className="col-xl-3 col-md-6"
+                        className="col-xl-3 col-8 col-md-6"
                         onClick={() =>
                           setFilterData((prevData) => ({
                             ...prevData,
@@ -845,7 +872,7 @@ function Dashboard() {
                       </div>
 
                       <div
-                        className="col-xl-3 col-md-6"
+                        className="col-xl-3 col-8 col-md-6"
                         onClick={() =>
                           setFilterData((prevData) => ({
                             ...prevData,
@@ -901,50 +928,11 @@ function Dashboard() {
                         <h4 className="card-title mb-0 flex-grow-1">
                           Complaints List
                         </h4>
-                        {/* <div className="flex-shrink-0">
-                          <div className="dropdown card-header-dropdown">
-                            <a
-                              className="text-reset dropdown-btn"
-                              href="#"
-                              data-bs-toggle="dropdown"
-                              aria-haspopup="true"
-                              aria-expanded="false"
-                            >
-                              <span className="fw-semibold text-uppercase fs-12">
-                                Filter by: &nbsp;
-                              </span>
-                              <span className="text-muted">
-                                {status !== "" ? status : "All Complaints"}
-                                <i className="mdi mdi-chevron-down ms-1"></i>
-                              </span>
-                            </a>
-                            <div className="dropdown-menu dropdown-menu-end">
-                              <button
-                                className="dropdown-item"
-                                onClick={() => setStatus("")}
-                                disabled={showLoader}
-                              >
-                                All Complaints
-                              </button>
-                              {complaintStatus.map((status) => (
-                                <button
-                                  key={status}
-                                  className="dropdown-item"
-                                  onClick={() => setStatus(status)}
-                                  disabled={showLoader}
-                                >
-                                  {status}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        </div> */}
                       </div>
                       <div className="table-responsive px-4 mt-4 table-card overflow-auto">
-                        <table className="table table-centered align-middle table-striped">
+                        <table className="table table-centered table-complaint table-bordered align-middle table-striped">
                           <thead className="bg-light text-muted">
                             <tr>
-                              {/* <th>S.No.</th> */}
                               <th>Complaint Details</th>
                               <th>Consumer Details</th>
                               <th>Date</th>
@@ -971,7 +959,7 @@ function Dashboard() {
                               complaint.map((complaint, index) => (
                                 <React.Fragment key={complaint._id}>
                                   <tr>
-                                    <td>
+                                    <td style={{ whiteSpace: "nowrap" }}>
                                       <strong>No: </strong>
                                       {complaint.complaintNo}
                                       <br />
@@ -991,7 +979,7 @@ function Dashboard() {
                                       <strong>Address: </strong>
                                       {complaint.consumerAddress}{" "}
                                       <button
-                                        className="btn btn-primary px-1 py-0"
+                                        className="btn btn-primary px-1 py-0 mt-1 d-block"
                                         onClick={() => {
                                           if (
                                             complaint.complaintStatus !== "Open"
@@ -1054,6 +1042,21 @@ function Dashboard() {
                                           {complaint?.gangDetail?.gangName}
                                           <br />
                                           {complaint?.gangDetail?.gangMobileNo}
+                                          <br />
+                                          {complaint.complaintStatus ===
+                                            "Assigned" &&
+                                            complaint?.gangDetail
+                                              ?.distanceInKm !== "" &&
+                                            !isNaN(
+                                              parseFloat(
+                                                complaint?.gangDetail
+                                                  ?.distanceInKm
+                                              )
+                                            ) &&
+                                            `${parseFloat(
+                                              complaint?.gangDetail
+                                                ?.distanceInKm
+                                            ).toFixed(2)} KM Away`}
                                         </>
                                       )}
                                     </td>

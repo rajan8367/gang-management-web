@@ -3,9 +3,13 @@ import logo from "./../assets/images/logo-light.png";
 import { useUserContext } from "../hooks/userContext";
 function Sidebar() {
   const { pathname } = useLocation();
-  const { userType } = useUserContext();
+  const { userType, menuOpen, setMenuOpen } = useUserContext();
   return (
-    <div className="app-menu navbar-menu">
+    <div
+      className={
+        menuOpen ? `app-menu navbar-menu openMenu` : `app-menu navbar-menu`
+      }
+    >
       <div className="navbar-brand-box">
         <Link to={"/dashboard"} className="logo logo-dark">
           <span className="logo-sm">
@@ -35,7 +39,11 @@ function Sidebar() {
 
       <div id="scrollbar">
         <div className="container-fluid">
-          <ul className="navbar-nav" id="navbar-nav">
+          <ul
+            className="navbar-nav"
+            id="navbar-nav"
+            onClick={() => setMenuOpen(false)}
+          >
             <li className="menu-title">
               <span data-key="t-menu">Menu</span>
             </li>

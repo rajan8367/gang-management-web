@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useParams } from "react-router-dom";
@@ -9,7 +8,13 @@ import { apiUrl } from "../../Constant";
 import Loader from "../../Component/Loader";
 import Swal from "sweetalert2"; // SweetAlert2
 import Snackbar from "@mui/material/Snackbar";
-import Alert from "@mui/material/Alert"; // MUI Toast
+import Alert from "@mui/material/Alert";
+import {
+  APIProvider,
+  Map,
+  Marker,
+  InfoWindow,
+} from "@vis.gl/react-google-maps";
 
 // Custom map marker icon
 const customIcon = L.icon({
@@ -32,6 +37,8 @@ function ComplaintInfo() {
   const [toastOpen, setToastOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastSeverity, setToastSeverity] = useState("success");
+  const [isInfoWindowOpen, setIsInfoWindowOpen] = useState(false);
+  const [isGangInfoWindowOpen, setGangInfoWindowOpen] = useState(false);
   const isMobileDevice = () => {
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
     return /android|iphone|ipad|iPod/i.test(userAgent);
@@ -159,7 +166,16 @@ function ComplaintInfo() {
   if (error) {
     return <p className="text-danger">{error}</p>;
   }
-
+  const handleDragEnd = (event) => {
+    const newLat = event.latLng.lat();
+    const newLng = event.latLng.lng();
+    console.log("Marker released at:", newLat, newLng);
+    setComplaintData((prev) => ({
+      ...prev,
+      consumerLat: newLat,
+      consumerLon: newLng,
+    }));
+  };
   return (
     <div className="container-fluid mt-2">
       <div className="row">
@@ -201,57 +217,98 @@ function ComplaintInfo() {
                 backgroundColor: "#f4f4f4",
               }}
             >
-              <MapContainer
-                center={
-                  complaintData?.consumerLat && complaintData?.consumerLon
-                    ? [complaintData?.consumerLat, complaintData?.consumerLon]
-                    : [26.4499, 80.3319] // Default to Kanpur
-                }
-                zoom={13}
-                style={{ height: "100%", width: "100%" }}
-              >
-                <TileLayer
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                />
-                <Marker
-                  position={
+              <APIProvider apiKey={"AIzaSyDY8Trnj0J15trOsOS-rN6LaswdopjPWVI"}>
+                <Map
+                  style={{ width: "100%", height: "400px" }}
+                  defaultCenter={
                     complaintData?.consumerLat && complaintData?.consumerLon
-                      ? [complaintData?.consumerLat, complaintData?.consumerLon]
-                      : [26.4499, 80.3319] // Default marker position at Kanpur
+                      ? {
+                          lat: Number(complaintData.consumerLat) || 26.4499,
+                          lng: Number(complaintData.consumerLon) || 80.3319,
+                        }
+                      : { lat: 26.4499, lng: 80.3319 }
                   }
-                  draggable={complaintData?.complaintStatus === "Open"}
-                  icon={customIcon}
-                  eventHandlers={{
-                    dragend: (event) => {
-                      const { lat, lng } = event.target.getLatLng();
-                      setComplaintData((prev) => ({
-                        ...prev,
-                        consumerLat: lat,
-                        consumerLon: lng,
-                      }));
-                    },
-                  }}
+                  defaultZoom={13}
+                  gestureHandling={"greedy"}
+                  disableDefaultUI={true}
                 >
-                  <Popup>
-                    {complaintData?.complaintStatus === "Open"
-                      ? "Drag to set consumer location."
-                      : "Consumer location."}
-                    {!(
-                      complaintData?.consumerLat && complaintData?.consumerLon
-                    ) && " (Default location: Kanpur)"}
-                  </Popup>
-                </Marker>
-                {gangData?.latitude && gangData?.longitude && (
                   <Marker
-                    position={[gangData?.latitude, gangData?.longitude]}
-                    icon={customIcon}
-                    draggable={false}
-                  >
-                    <Popup>Gang Location</Popup>
-                  </Marker>
-                )}
-              </MapContainer>
+                    position={
+                      complaintData?.consumerLat && complaintData?.consumerLon
+                        ? {
+                            lat: Number(complaintData.consumerLat) || 26.4499,
+                            lng: Number(complaintData.consumerLon) || 80.3319,
+                          }
+                        : { lat: 26.4499, lng: 80.3319 }
+                    }
+                    draggable={complaintData?.complaintStatus === "Open"}
+                    onDragEnd={(event) => {
+                      const newLat = event.latLng.lat();
+                      const newLng = event.latLng.lng();
+                      console.log(
+                        "Complaint marker dragged to:",
+                        newLat,
+                        newLng
+                      );
+                    }}
+                    onClick={() => setIsInfoWindowOpen(!isInfoWindowOpen)}
+                  />
+                  {isInfoWindowOpen && (
+                    <InfoWindow
+                      position={
+                        complaintData?.consumerLat && complaintData?.consumerLon
+                          ? {
+                              lat: Number(complaintData.consumerLat),
+                              lng: Number(complaintData.consumerLon),
+                            }
+                          : { lat: 26.4499, lng: 80.3319 }
+                      }
+                      onCloseClick={() =>
+                        setIsInfoWindowOpen(!isInfoWindowOpen)
+                      }
+                    >
+                      <div>
+                        {complaintData?.complaintStatus === "Open" ? (
+                          <h4>Drag to set consumer location.</h4>
+                        ) : (
+                          <h4>Consumer location.</h4>
+                        )}
+                        {!(
+                          complaintData?.consumerLat &&
+                          complaintData?.consumerLon
+                        ) && <h4>(Default location: Kanpur)</h4>}
+                      </div>
+                    </InfoWindow>
+                  )}
+
+                  {gangData?.latitude && gangData?.longitude && (
+                    <Marker
+                      position={{
+                        lat: Number(gangData?.latitude),
+                        lng: Number(gangData?.longitude),
+                      }}
+                      onClick={() =>
+                        setGangInfoWindowOpen(!isGangInfoWindowOpen)
+                      }
+                    />
+                  )}
+                  {isGangInfoWindowOpen && (
+                    <InfoWindow
+                      position={{
+                        lat: Number(gangData?.latitude),
+                        lng: Number(gangData?.longitude),
+                      }}
+                      onCloseClick={() =>
+                        setIsInfoWindowOpen(!isGangInfoWindowOpen)
+                      }
+                    >
+                      <div>
+                        <h4>Gang Location</h4>
+                      </div>
+                    </InfoWindow>
+                  )}
+                </Map>
+              </APIProvider>
             </div>
           </div>
           {complaintData?.complaintStatus === "Open" && (

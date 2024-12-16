@@ -22,6 +22,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import MapPicker from "../../Component/MapPicker";
 import MapComponent from "../../Component/MapComponent";
 import Pagination from "../../Component/Pagination";
+import { APIProvider, Map, Marker } from "@vis.gl/react-google-maps";
 
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -65,6 +66,15 @@ function Dashboard() {
     lat: "",
     long: "",
   });
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
+
+  const handleMapLoad = (map) => {
+    console.log("Map initialized:", map);
+    map.addListener("tilesloaded", () => {
+      console.log("Map fully loaded");
+      setIsMapLoaded(true);
+    });
+  };
 
   function formatDate(dateString) {
     // Parse the date string using Moment.js
@@ -1219,8 +1229,43 @@ function Dashboard() {
         sx={{ zIndex: 99999 }}
       >
         <DialogTitle>Consumer Location</DialogTitle>
+
         <DialogContent>
-          <MapComponent lat={location.lat} open={openMap} lng={location.long} />
+          {location.lat === "" ? (
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: "#f0f0f0",
+                zIndex: 1,
+              }}
+            >
+              <h4>Loading map...</h4>
+            </div>
+          ) : (
+            <APIProvider apiKey={"AIzaSyDY8Trnj0J15trOsOS-rN6LaswdopjPWVI"}>
+              <Map
+                style={{ width: "100%", height: "400px" }}
+                defaultCenter={{
+                  lat: Number(location.lat),
+                  lng: Number(location.long),
+                }}
+                defaultZoom={13}
+                gestureHandling={"greedy"}
+                disableDefaultUI={true}
+              >
+                <Marker
+                  position={{
+                    lat: Number(location.lat),
+                    lng: Number(location.long),
+                  }}
+                />
+              </Map>
+            </APIProvider>
+          )}
         </DialogContent>
       </Dialog>
     </Layout>

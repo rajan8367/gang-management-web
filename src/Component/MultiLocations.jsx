@@ -1,37 +1,13 @@
-import React, { useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
-import L from "leaflet";
+import React, { useState } from "react";
+
+import {
+  APIProvider,
+  Map,
+  Marker,
+  InfoWindow,
+} from "@vis.gl/react-google-maps";
 
 const MultiLocation = ({ locations, open }) => {
-  const defaultZoom = 12; // Default zoom level
-
-  // Custom icon
-  const customIcon = L.icon({
-    iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-    shadowSize: [41, 41],
-  });
-
-  // Component to reset zoom and fit bounds
-  const ResetZoom = () => {
-    const map = useMap();
-
-    useEffect(() => {
-      if (open && validLocations.length > 0) {
-        const bounds = L.latLngBounds(
-          validLocations.map((loc) => [loc.latitude, loc.longitude])
-        );
-        map.fitBounds(bounds); // Adjust the view to fit all markers
-      }
-    }, [open, validLocations, map]);
-
-    return null;
-  };
-
-  // Filter valid locations (latitude and longitude must not be blank)
   const validLocations = locations.filter(
     (loc) =>
       loc.latitude !== undefined &&
@@ -42,38 +18,72 @@ const MultiLocation = ({ locations, open }) => {
       loc.longitude !== ""
   );
 
-  // Determine the center
   const center =
     validLocations.length > 0
-      ? [validLocations[0].latitude, validLocations[0].longitude]
-      : [0, 0]; // Fallback to [0, 0] if no valid locations exist
-
-  return validLocations.length > 0 ? (
-    <MapContainer
-      center={center}
-      zoom={defaultZoom}
-      style={{ height: "400px", width: "100%" }}
-    >
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      />
-
-      {validLocations.map((location, index) => (
+      ? {
+          lat: Number(validLocations[0].latitude),
+          lng: Number(validLocations[0].longitude),
+        }
+      : [0, 0];
+  const Tooltip = ({ lat, lng, title }) => {
+    console.log(title);
+    const [isOpen, setIsOpen] = useState(false);
+    return (
+      <>
         <Marker
-          key={index}
-          position={[location.latitude, location.longitude]}
-          icon={customIcon}
+          position={{
+            lat: Number(lat),
+            lng: Number(lng),
+          }}
+          onClick={() => setIsOpen(!isOpen)}
+        />
+        {isOpen && (
+          <InfoWindow
+            position={{
+              lat: Number(lat),
+              lng: Number(lng),
+            }}
+            onCloseClick={() => setIsOpen(!isOpen)}
+          >
+            <div>
+              <h4>{title}</h4>
+            </div>
+          </InfoWindow>
+        )}
+      </>
+    );
+  };
+  console.log(validLocations);
+  return validLocations.length > 0 ? (
+    <>
+      <APIProvider apiKey={"AIzaSyDY8Trnj0J15trOsOS-rN6LaswdopjPWVI"}>
+        <Map
+          style={{ width: "100%", height: "400px" }}
+          defaultCenter={center}
+          defaultZoom={13}
+          gestureHandling={"greedy"}
+          disableDefaultUI={true}
         >
-          <Popup>
-            {location.gangName || location?.vname},<br />
-            {location?.gangCategoryID?.categoryName}
-          </Popup>
-        </Marker>
-      ))}
-
-      <ResetZoom />
-    </MapContainer>
+          {validLocations.map((location, index) => (
+            <Marker
+              key={index + "-" + location.lat}
+              position={{
+                lat: Number(location.latitude),
+                lng: Number(location.longitude),
+              }}
+            />
+          ))}
+          {validLocations.map((location, index) => (
+            <Tooltip
+              key={index + "-" + location.vname}
+              lat={location.latitude}
+              title={location.vname ? location.vname : location.gangName}
+              lng={location.longitude}
+            />
+          ))}
+        </Map>
+      </APIProvider>
+    </>
   ) : (
     <p>No valid locations available</p>
   );

@@ -11,9 +11,13 @@ import { useUserContext } from "../../hooks/userContext";
 import axios from "axios";
 import { apiUrl, formatDate } from "../../Constant";
 import "leaflet/dist/leaflet.css";
-import { Dialog, DialogContent, DialogTitle, Slide } from "@mui/material";
+import { DialogContent, DialogTitle, Slide } from "@mui/material";
 import MapComponent from "../../Component/MapComponent";
 import Swal from "sweetalert2";
+import { Dialog, DialogActions, IconButton } from "@mui/material";
+
+import { ArrowForward, ArrowBack } from "@mui/icons-material";
+import { APIProvider, Map, Marker } from "@vis.gl/react-google-maps";
 
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -26,6 +30,9 @@ function ComplaintDetail() {
   const [tab, setTab] = useState(1);
   const [showLoader, setShowLoader] = useState(false);
   const [complaintData, setComplaintData] = useState(null);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   const [openMap, setOpenMap] = useState(false);
   const [location, setLocation] = useState({
@@ -43,6 +50,33 @@ function ComplaintDetail() {
       //getAddressFromLatLng();
     }
   }, [complaintData]);
+  const handleOpenDialog = (index) => {
+    setSelectedImage(complaintData?.siteDocuments[index]?.documentName);
+    setCurrentImageIndex(index);
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+  };
+
+  const handleNextImage = () => {
+    if (currentImageIndex < complaintData?.siteDocuments.length - 1) {
+      setCurrentImageIndex(currentImageIndex + 1);
+      setSelectedImage(
+        complaintData?.siteDocuments[currentImageIndex + 1]?.documentName
+      );
+    }
+  };
+
+  const handlePrevImage = () => {
+    if (currentImageIndex > 0) {
+      setCurrentImageIndex(currentImageIndex - 1);
+      setSelectedImage(
+        complaintData?.siteDocuments[currentImageIndex - 1]?.documentName
+      );
+    }
+  };
   const fetchComplaint = () => {
     setShowLoader(true);
     const data = {
@@ -88,6 +122,20 @@ function ComplaintDetail() {
       console.error("Error fetching the address:", error);
       //setError("An error occurred while fetching the address.");
     }
+  };
+  const convertTimestamp = (timestamp) => {
+    const date = new Date(timestamp);
+
+    const day = date.getUTCDate();
+    const month = date.getUTCMonth() + 1; // Months are 0-indexed
+    const year = date.getUTCFullYear();
+
+    const hours = date.getUTCHours();
+    const minutes = date.getUTCMinutes().toString().padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    const adjustedHours = hours % 12 || 12; // Converts 0 to 12 for AM/PM format
+
+    return `${day}-${month}-${year}, At ${adjustedHours}:${minutes} ${ampm}`;
   };
   return (
     <Layout>
@@ -157,7 +205,10 @@ function ComplaintDetail() {
                             </tr>
                             <tr>
                               <td className="fw-medium">Consumer Address</td>
-                              <td colSpan="3">
+                              <td
+                                colSpan="3"
+                                style={{ whiteSpace: "break-spaces" }}
+                              >
                                 {complaintData?.consumerAddress}
                               </td>
                             </tr>
@@ -268,26 +319,30 @@ function ComplaintDetail() {
 
                 <div className="card-body">
                   <div className="live-preview">
-                    <div className="row g-2  mb-2">
+                    <div className="row g-2 mb-2">
                       {complaintData?.siteDocuments.length > 0 &&
-                        complaintData?.siteDocuments.map((doc) => (
-                          <div className="col-sm-3" key={doc._id}>
-                            <figure className="figure mb-0">
-                              <a
-                                className="image-popup"
-                                href="#"
-                                title="Site Photo"
-                              >
-                                <img
-                                  src={doc.documentName}
-                                  className="figure-img img-fluid rounded"
-                                  alt="Site Photo"
-                                />
-                              </a>
-                              <figcaption className="figure-caption">
-                                Uploaded By: {doc.uploadBy}
-                              </figcaption>
-                            </figure>
+                        complaintData?.siteDocuments.map((doc, index) => (
+                          <div className="col-md-3 card me-2" key={doc._id}>
+                            <img
+                              onClick={() => handleOpenDialog(index)}
+                              src={doc.documentName}
+                              className="img-fluid cursor-pointer"
+                              alt="Site Photo"
+                            />
+                            {index === 0 ? (
+                              <h4>Selfie</h4>
+                            ) : index === 1 ? (
+                              <h4>Site</h4>
+                            ) : (
+                              <h4>Site After Work</h4>
+                            )}
+                            <p className="figure-caption mb-0">
+                              Uploaded By: {doc.uploadBy} <br />
+                            </p>
+                            <p className="text-end">
+                              {doc?.uploadDate &&
+                                convertTimestamp(doc.uploadDate)}
+                            </p>
                           </div>
                         ))}
                     </div>
@@ -886,8 +941,82 @@ function ComplaintDetail() {
       >
         <DialogTitle>Site Location</DialogTitle>
         <DialogContent>
-          <MapComponent lat={location.lat} open={openMap} lng={location.long} />
+          <APIProvider apiKey={"AIzaSyDY8Trnj0J15trOsOS-rN6LaswdopjPWVI"}>
+            <Map
+              style={{ width: "100%", height: "400px" }}
+              defaultCenter={{
+                lat: Number(location.lat),
+                lng: Number(location.long),
+              }}
+              defaultZoom={13}
+              gestureHandling={"greedy"}
+              disableDefaultUI={true}
+            >
+              <Marker
+                position={{
+                  lat: Number(location.lat),
+                  lng: Number(location.long),
+                }}
+              />
+            </Map>
+          </APIProvider>
         </DialogContent>
+      </Dialog>
+      {/* Dialog for Image Carousel */}
+      <Dialog
+        open={openDialog}
+        onClose={handleCloseDialog}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          {currentImageIndex === 0
+            ? "Selfie"
+            : currentImageIndex === 1
+            ? "Site"
+            : "Afer work Site"}{" "}
+          Image
+        </DialogTitle>
+        <DialogContent
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 0,
+            overflow: "hidden",
+            height: "500px", // Adjust the dialog height as needed
+          }}
+        >
+          <img
+            src={selectedImage}
+            alt="Selected"
+            style={{
+              maxWidth: "100%",
+              maxHeight: "100%",
+              objectFit: "contain", // Ensures the image fits within the dialog
+            }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <IconButton
+            edge="start"
+            color="inherit"
+            onClick={handlePrevImage}
+            disabled={currentImageIndex === 0}
+          >
+            <ArrowBack />
+          </IconButton>
+          <IconButton
+            edge="end"
+            color="inherit"
+            onClick={handleNextImage}
+            disabled={
+              currentImageIndex === complaintData?.siteDocuments.length - 1
+            }
+          >
+            <ArrowForward />
+          </IconButton>
+        </DialogActions>
       </Dialog>
     </Layout>
   );

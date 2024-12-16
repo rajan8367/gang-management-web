@@ -2,7 +2,7 @@ import { forwardRef, useEffect, useState } from "react";
 import Layout from "../../Component/Layout";
 import axios from "axios";
 import { useUserContext } from "../../hooks/userContext";
-import { apiUrl } from "../../Constant";
+import { apiUrl, formatDate } from "../../Constant";
 import Loader from "../../Component/Loader";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
@@ -18,6 +18,7 @@ import Autocomplete from "@mui/material/Autocomplete";
 import MapComponent from "../../Component/MapComponent";
 import MultiLocation from "../../Component/MultiLocations";
 import Pagination from "../../Component/Pagination";
+import { APIProvider, Map, Marker } from "@vis.gl/react-google-maps";
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
@@ -46,6 +47,7 @@ function GangList() {
   const [totalPages, setTotalPages] = useState(0);
   const [filterData, setFilterData] = useState([]);
   const [query, setQuery] = useState("");
+  const [gangLocation, setGangLocation] = useState([]);
   const [location, setLocation] = useState({
     lat: "",
     long: "",
@@ -134,7 +136,7 @@ function GangList() {
       search: query,
       gangID: "",
       page: currentPage,
-      limit: 10,
+      limit: 50,
     };
     axios
       .post(`${apiUrl}list-gang`, data, {
@@ -147,6 +149,11 @@ function GangList() {
         console.log("Response:", response);
         setFilterData(response?.data?.gangs);
         setGangList(response?.data?.gangs);
+        const tempArr = response?.data?.gangs.filter(
+          (location) => location.latitude !== "" && location.longitude !== ""
+        );
+        console.log(tempArr);
+        setGangLocation(tempArr);
         setShowLoader(false);
         setTotalPages(response.data?.pages);
       })
@@ -649,6 +656,20 @@ function GangList() {
         console.error("Error fetching Role:", error);
       });
   };
+  const convertTimestamp = (timestamp) => {
+    const date = new Date(timestamp);
+
+    const day = date.getUTCDate();
+    const month = date.getUTCMonth() + 1; // Months are 0-indexed
+    const year = date.getUTCFullYear();
+
+    const hours = date.getUTCHours();
+    const minutes = date.getUTCMinutes().toString().padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    const adjustedHours = hours % 12 || 12; // Converts 0 to 12 for AM/PM format
+
+    return `${day}-${month}-${year}, At ${adjustedHours}:${minutes} ${ampm}`;
+  };
 
   return (
     <Layout>
@@ -713,7 +734,7 @@ function GangList() {
 
                 <div className="card-body">
                   <div className="table-responsive table-card mb-4">
-                    <table className="table align-middle table-nowrap mb-0">
+                    <table className="table table-bordered align-middle table-nowrap mb-0">
                       <thead>
                         <tr>
                           <th scope="col" style={{ width: "40px" }}>
@@ -722,6 +743,7 @@ function GangList() {
                           <th>Gang Detail</th>
                           <th>Van Detail</th>
                           <th>Loction</th>
+                          <th>Last Login</th>
                           <th align="center">Action</th>
                         </tr>
                       </thead>
@@ -731,7 +753,7 @@ function GangList() {
                           filterData.map((gang, index) => (
                             <tr key={gang._id}>
                               <td scope="row">
-                                {(currentPage - 1) * 10 + index + 1}
+                                {(currentPage - 1) * 50 + index + 1}
                               </td>
                               <td>
                                 <strong>Category:</strong>{" "}
@@ -765,6 +787,11 @@ function GangList() {
                                       <i className="ri-map-pin-line"></i>
                                     </button>
                                   )}
+                              </td>
+                              <td>
+                                {gang?.lastLoginDate
+                                  ? convertTimestamp(gang?.lastLoginDate)
+                                  : "NA"}
                               </td>
                               <td>
                                 <button
@@ -1271,13 +1298,27 @@ function GangList() {
         </DialogTitle>
         <DialogContent>
           {gangMap ? (
-            <MapComponent
-              lat={location.lat}
-              open={gangMap}
-              lng={location.long}
-            />
+            <APIProvider apiKey={"AIzaSyDY8Trnj0J15trOsOS-rN6LaswdopjPWVI"}>
+              <Map
+                style={{ width: "100%", height: "400px" }}
+                defaultCenter={{
+                  lat: Number(location.lat),
+                  lng: Number(location.long),
+                }}
+                defaultZoom={13}
+                gestureHandling={"greedy"}
+                disableDefaultUI={true}
+              >
+                <Marker
+                  position={{
+                    lat: Number(location.lat),
+                    lng: Number(location.long),
+                  }}
+                />
+              </Map>
+            </APIProvider>
           ) : (
-            <MultiLocation open={multiLocation} locations={gangList} />
+            <MultiLocation open={multiLocation} locations={gangLocation} />
           )}
         </DialogContent>
       </Dialog>

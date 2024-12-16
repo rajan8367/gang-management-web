@@ -10,6 +10,7 @@ import Pagination from "./../../Component/Pagination";
 import { Dialog, DialogContent, DialogTitle } from "@mui/material";
 import MapComponent from "../../Component/MapComponent";
 import MultiLocation from "../../Component/MultiLocations";
+import { APIProvider, Map, Marker } from "@vis.gl/react-google-maps";
 
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -236,13 +237,29 @@ function VanList() {
         </DialogTitle>
         <DialogContent>
           {vanMap ? (
-            <MapComponent
-              lat={location.lat}
-              open={vanMap}
-              lng={location.long}
-            />
+            <APIProvider apiKey={"AIzaSyDY8Trnj0J15trOsOS-rN6LaswdopjPWVI"}>
+              <Map
+                style={{ width: "100%", height: "400px" }}
+                defaultCenter={{
+                  lat: Number(location.lat),
+                  lng: Number(location.long),
+                }}
+                defaultZoom={13}
+                gestureHandling={"greedy"}
+                disableDefaultUI={true}
+              >
+                <Marker
+                  position={{
+                    lat: Number(location.lat),
+                    lng: Number(location.long),
+                  }}
+                />
+              </Map>
+            </APIProvider>
           ) : (
-            <MultiLocation open={multiLocation} locations={allLocation} />
+            <>
+              <MultiLocation open={multiLocation} locations={allLocation} />
+            </>
           )}
         </DialogContent>
       </Dialog>

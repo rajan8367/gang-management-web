@@ -15,6 +15,7 @@ import {
   Marker,
   InfoWindow,
 } from "@vis.gl/react-google-maps";
+import GoogleMap from "../../Component/Map";
 
 // Custom map marker icon
 const customIcon = L.icon({

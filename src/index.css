@@ -1,3 +1,37 @@
 .swal2-container {
     z-index: 20000 !important;
   }
+  .search-box-container {
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px;
+    box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+  }
+  
+  .autocomplete-container input {
+    width: 250px;
+    padding: 6px;
+    font-size: 14px;
+  }
+  
+  .custom-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #ddd;
+    background-color: white;
+    max-height: 150px;
+    overflow-y: auto;
+  }
+  
+  .custom-list-item {
+    padding: 8px;
+    cursor: pointer;
+  }
+  
+  .custom-list-item:hover {
+    background-color: #f1f1f1;
+  }
+  

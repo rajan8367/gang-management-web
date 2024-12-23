@@ -941,25 +941,27 @@ function ComplaintDetail() {
       >
         <DialogTitle>Site Location</DialogTitle>
         <DialogContent>
-          <APIProvider apiKey={"AIzaSyDY8Trnj0J15trOsOS-rN6LaswdopjPWVI"}>
-            <Map
-              style={{ width: "100%", height: "400px" }}
-              defaultCenter={{
-                lat: Number(location.lat),
-                lng: Number(location.long),
-              }}
-              defaultZoom={13}
-              gestureHandling={"greedy"}
-              disableDefaultUI={true}
-            >
-              <Marker
-                position={{
+          {location.lat !== "" && (
+            <APIProvider apiKey={"AIzaSyDY8Trnj0J15trOsOS-rN6LaswdopjPWVI"}>
+              <Map
+                style={{ width: "100%", height: "400px" }}
+                defaultCenter={{
                   lat: Number(location.lat),
                   lng: Number(location.long),
                 }}
-              />
-            </Map>
-          </APIProvider>
+                defaultZoom={13}
+                gestureHandling={"greedy"}
+                disableDefaultUI={true}
+              >
+                <Marker
+                  position={{
+                    lat: Number(location.lat),
+                    lng: Number(location.long),
+                  }}
+                />
+              </Map>
+            </APIProvider>
+          )}
         </DialogContent>
       </Dialog>
       {/* Dialog for Image Carousel */}

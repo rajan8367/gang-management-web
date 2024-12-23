@@ -203,8 +203,10 @@ function ComplaintInfo() {
                 textAlign: "center",
               }}
             >
+              {console.log("_____", complaintData?.complaintStatus === "Open")}
               <h5 className="mb-0 text-white">
-                {!(complaintData?.consumerLat && complaintData?.consumerLon)
+                {complaintData?.consumerLat === "" &&
+                complaintData?.consumerLon === ""
                   ? "Drag the marker to set consumer location"
                   : "Complaint Location Map"}
               </h5>
@@ -251,6 +253,11 @@ function ComplaintInfo() {
                         newLat,
                         newLng
                       );
+                      setComplaintData((prev) => ({
+                        ...prev,
+                        consumerLat: newLat,
+                        consumerLon: newLng,
+                      }));
                     }}
                     onClick={() => setIsInfoWindowOpen(!isInfoWindowOpen)}
                   />

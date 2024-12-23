@@ -23,6 +23,7 @@ import MapPicker from "../../Component/MapPicker";
 import MapComponent from "../../Component/MapComponent";
 import Pagination from "../../Component/Pagination";
 import { APIProvider, Map, Marker } from "@vis.gl/react-google-maps";
+import Swal from "sweetalert2";
 
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -67,7 +68,14 @@ function Dashboard() {
     long: "",
   });
   const [isMapLoaded, setIsMapLoaded] = useState(false);
-
+  const [gangPopup, setGangPopup] = useState(false);
+  const [gangs, setGangs] = useState([]);
+  const [totalGangPages, setTotalGangPages] = useState(0);
+  const [filterGangs, setFilterGangs] = useState([]);
+  const [currentGangPage, setCurrentGangPage] = useState(1);
+  const [query, setQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [gangMap, setGangMap] = useState(false);
   const handleMapLoad = (map) => {
     console.log("Map initialized:", map);
     map.addListener("tilesloaded", () => {
@@ -225,7 +233,79 @@ function Dashboard() {
         console.log(error);
       });
   };
+  useEffect(() => {
+    if (token !== "") {
+      getGangList();
+    }
+  }, [currentGangPage, query, selectedCategory]);
 
+  const getGangList = () => {
+    setShowLoader(true);
+    const data = {
+      search: query,
+      gangID: "",
+      page: currentGangPage,
+      limit: 50,
+      gangCategory: selectedCategory,
+    };
+    axios
+      .post(`${apiUrl}list-gang`, data, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        console.log("Response:", response);
+        setFilterGangs(response?.data?.gangs);
+        setGangList(response?.data?.gangs);
+        setShowLoader(false);
+        setTotalGangPages(response.data?.pages);
+      })
+      .catch((error) => {
+        setShowLoader(false);
+        console.log(error);
+        Swal.fire({
+          title: "Error!",
+          text: error?.response?.data?.message || "Failed to fetch gangs",
+          icon: "error",
+        });
+      });
+  };
+  const manualAgging = (gangId) => {
+    setShowLoader(true);
+    const data = {
+      complaintId: complaintId,
+      gangID: gangId,
+    };
+    axios
+      .post(`${apiUrl}assign-complaint-to-gang`, data, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        console.log("Response:", response);
+        setOpen(false);
+        Swal.fire({
+          title: "Success!",
+          text: response?.data?.message,
+          icon: "success",
+        });
+        setGangPopup(false);
+        setShowLoader(false);
+      })
+      .catch((error) => {
+        setShowLoader(false);
+        console.log(error);
+        Swal.fire({
+          title: "Error!",
+          text: error?.response?.data?.message || "Failed to fetch gangs",
+          icon: "error",
+        });
+      });
+  };
   const assignComplaint = async (categoryName) => {
     setShowLoader(true);
 
@@ -374,7 +454,20 @@ function Dashboard() {
         setShowLoader(false);
       });
   };
+  const convertTimestamp = (timestamp) => {
+    const date = new Date(timestamp);
 
+    const day = date.getUTCDate();
+    const month = date.getUTCMonth() + 1; // Months are 0-indexed
+    const year = date.getUTCFullYear();
+
+    const hours = date.getUTCHours();
+    const minutes = date.getUTCMinutes().toString().padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    const adjustedHours = hours % 12 || 12; // Converts 0 to 12 for AM/PM format
+
+    return `${day}-${month}-${year}, At ${adjustedHours}:${minutes} ${ampm}`;
+  };
   return (
     <Layout>
       {showLoader && <Loader />}
@@ -468,7 +561,7 @@ function Dashboard() {
                               <input
                                 type="text"
                                 className="form-control shadow"
-                                placeholder="Complaint Number"
+                                placeholder="Search Text"
                                 value={filterData.complaintNo}
                                 name="complaintNo"
                                 onChange={handleChange}
@@ -1029,24 +1122,37 @@ function Dashboard() {
                                           complaint?.remarks}
                                       </td>
                                     )}
-                                    <td>
+                                    <td className="text-nowrap">
                                       {(complaint?.consumerLat &&
                                         complaint?.consumerLon &&
                                         complaint.complaintStatus === "Open") ||
                                       complaint.complaintStatus ===
                                         "Esclate" ? (
-                                        <button
-                                          className="btn btn-primary"
-                                          onClick={() => {
-                                            setOpen(true);
-                                            setComplaintId(complaint._id);
-                                            setAssignType("assign");
-                                            fetchGang(complaint._id);
-                                          }}
-                                          disabled={showLoader}
-                                        >
-                                          Assign
-                                        </button>
+                                        <>
+                                          <button
+                                            className="btn btn-primary btn-sm"
+                                            onClick={() => {
+                                              setOpen(true);
+                                              setComplaintId(complaint._id);
+                                              setAssignType("assign");
+                                              fetchGang(complaint._id);
+                                            }}
+                                            disabled={showLoader}
+                                          >
+                                            Auto
+                                          </button>
+                                          <button
+                                            className="btn btn-primary btn-sm ms-2"
+                                            onClick={() => {
+                                              setGangPopup(true);
+                                              setComplaintId(complaint._id);
+                                              getGangList();
+                                            }}
+                                            disabled={showLoader}
+                                          >
+                                            Manual
+                                          </button>
+                                        </>
                                       ) : (
                                         <>
                                           {complaint?.gangDetail?.gangName}
@@ -1080,11 +1186,24 @@ function Dashboard() {
                                             complaint.complaintStatus !==
                                               "Resolved" && (
                                               <button
-                                                className="btn btn-primary"
+                                                className="btn btn-primary btn-sm"
                                                 onClick={() => {
-                                                  assignToDispatcher(
-                                                    complaint._id
-                                                  );
+                                                  Swal.fire({
+                                                    title: "Are you sure?",
+                                                    text: "You want to forward this complaint to dispatcher?",
+                                                    icon: "warning",
+                                                    showCancelButton: true,
+                                                    confirmButtonColor:
+                                                      "#3085d6",
+                                                    cancelButtonColor: "#d33",
+                                                    confirmButtonText: "Yes",
+                                                  }).then((result) => {
+                                                    if (result.isConfirmed) {
+                                                      assignToDispatcher(
+                                                        complaint._id
+                                                      );
+                                                    }
+                                                  });
                                                 }}
                                                 disabled={showLoader}
                                               >
@@ -1098,24 +1217,42 @@ function Dashboard() {
                                         <td className="text-nowrap">
                                           {complaint.complaintStatus ===
                                             "Assigned" && (
-                                            <button
-                                              className="btn btn-success"
-                                              onClick={() => {
-                                                setOpen(true);
+                                            <>
+                                              <button
+                                                className="btn btn-success btn-sm"
+                                                onClick={() => {
+                                                  setOpen(true);
+                                                  setComplaintId(complaint._id);
+                                                  setAssignType("reAssign");
+                                                  fetchGang(complaint._id);
+                                                }}
+                                                disabled={showLoader}
+                                              >
+                                                Auto
+                                              </button>
+                                              <button
+                                                className="btn btn-success btn-sm ms-2"
+                                                onClick={() => {
+                                                  setGangPopup(true);
+                                                  setComplaintId(complaint._id);
+                                                  getGangList();
+
+                                                  /* setOpen(true);
                                                 setComplaintId(complaint._id);
                                                 setAssignType("reAssign");
-                                                fetchGang(complaint._id);
-                                              }}
-                                              disabled={showLoader}
-                                            >
-                                              Re Assign
-                                            </button>
+                                                fetchGang(complaint._id); */
+                                                }}
+                                                disabled={showLoader}
+                                              >
+                                                Manual
+                                              </button>
+                                            </>
                                           )}
                                         </td>
                                       )}
                                     <td>
                                       <button
-                                        className="btn btn-primary"
+                                        className="btn btn-primary btn-sm"
                                         onClick={() =>
                                           viewDetail(complaint._id)
                                         }
@@ -1223,24 +1360,24 @@ function Dashboard() {
         open={openMap}
         TransitionComponent={Transition}
         keepMounted
-        onClose={() => setOpenMap(false)}
+        onClose={() => {
+          setGangMap(false);
+          setOpenMap(false);
+        }}
         fullWidth
         maxWidth="md"
         sx={{ zIndex: 99999 }}
       >
-        <DialogTitle>Consumer Location</DialogTitle>
-
+        <DialogTitle>{gangMap ? "Gang" : "Consumer"} Location</DialogTitle>
         <DialogContent>
-          {location.lat === "" ? (
+          {location.lat === "" || location.long === "" ? (
             <div
               style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "400px",
                 background: "#f0f0f0",
-                zIndex: 1,
               }}
             >
               <h4>Loading map...</h4>
@@ -1249,13 +1386,15 @@ function Dashboard() {
             <APIProvider apiKey={"AIzaSyDY8Trnj0J15trOsOS-rN6LaswdopjPWVI"}>
               <Map
                 style={{ width: "100%", height: "400px" }}
-                defaultCenter={{
+                center={{
                   lat: Number(location.lat),
                   lng: Number(location.long),
                 }}
-                defaultZoom={13}
+                zoom={13}
                 gestureHandling={"greedy"}
-                disableDefaultUI={true}
+                options={{
+                  disableDefaultUI: true,
+                }}
               >
                 <Marker
                   position={{
@@ -1266,6 +1405,140 @@ function Dashboard() {
               </Map>
             </APIProvider>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={gangPopup}
+        TransitionComponent={Transition}
+        keepMounted
+        onClose={() => setGangPopup(false)}
+        fullWidth
+        maxWidth="xl"
+      >
+        <DialogTitle>
+          Gang List{" "}
+          <i
+            className="ri-close-line cursor-pointer float-end fs-24"
+            onClick={() => setGangPopup(false)}
+          ></i>
+        </DialogTitle>
+        <div className="row m-0">
+          <div className="col-md-3">
+            <input
+              className="form-control"
+              placeholder="Search by name or mobile"
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setCurrentGangPage(1);
+              }}
+            />
+          </div>
+          <div className="col-md-3">
+            <select
+              className="form-control"
+              onChange={(e) => setSelectedCategory(e.target.value)}
+            >
+              <option value="">All Gang Category</option>
+              {categoryList?.map((category) => (
+                <option key={category._id} value={category._id}>
+                  {category.categoryName}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <DialogContent>
+          <div className="table-responsive table-card mb-4">
+            <table className="table align-middle table-nowrap mb-0">
+              <thead>
+                <tr>
+                  <th scope="col" style={{ width: "40px" }}>
+                    S.No.
+                  </th>
+                  <th>Gang Detail</th>
+                  <th>Van Detail</th>
+                  <th>Loction</th>
+                  <th>Last Login</th>
+                  <th align="center">Action</th>
+                </tr>
+              </thead>
+              <tbody className="list form-check-all">
+                {filterGangs.length > 0 &&
+                  filterGangs.map((gang, index) => (
+                    <tr key={gang._id}>
+                      <td scope="row">
+                        {(currentGangPage - 1) * 50 + index + 1}
+                      </td>
+                      <td>
+                        <strong>Category:</strong>{" "}
+                        {gang.gangCategoryID.categoryName}
+                        <br />
+                        <strong>Name:</strong> {gang.gangName}
+                        <br />
+                        <strong>Mobile:</strong> {gang.gangMobile}
+                      </td>
+                      <td>
+                        {gang.vanAvailable === "yes"
+                          ? gang.vanNo
+                          : "Van not attached"}
+                      </td>
+                      <td>
+                        {gang.latitude !== "" && gang.longitude !== "" && (
+                          <button
+                            className="btn btn-primary px-1 py-0"
+                            style={{ display: "block" }}
+                            onClick={() => {
+                              setLocation({
+                                lat: gang?.latitude,
+                                long: gang?.longitude,
+                              });
+                              setOpenMap(true);
+                              setGangMap(true);
+                            }}
+                          >
+                            <i className="ri-map-pin-line"></i>
+                          </button>
+                        )}
+                      </td>
+                      <td>
+                        {gang?.lastLoginDate
+                          ? convertTimestamp(gang?.lastLoginDate)
+                          : "NA"}
+                      </td>
+                      <td>
+                        <button
+                          className="btn btn-primary"
+                          onClick={() =>
+                            Swal.fire({
+                              title: "Are you sure?",
+                              text: "Do you want to assign this complaint to this gang?",
+                              icon: "warning",
+                              showCancelButton: true,
+                              confirmButtonText: "Yes",
+                              cancelButtonText: "No",
+                            }).then((result) => {
+                              if (result.isConfirmed) {
+                                manualAgging(gang._id);
+                              }
+                            })
+                          }
+                        >
+                          Assign
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+            {totalGangPages > 1 && (
+              <Pagination
+                totalPages={totalGangPages}
+                currentPage={currentGangPage}
+                setCurrentPage={setCurrentGangPage}
+              />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </Layout>

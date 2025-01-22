@@ -23,6 +23,7 @@ import Users from "./Pages/Private/UserList";
 import VanList from "./Pages/Private/VanList";
 import ComplaintInfo from "./Pages/public/ComplaintInfo";
 import ChangePassword from "./Pages/Private/ChangePassword";
+import MapTest from "./Pages/public/ComplaintInfo-test";
 
 function App() {
   const { pathname } = useLocation();
@@ -38,6 +39,15 @@ function App() {
             <>
               <PageTitle title="SignIn | Field Force Management" />
               <Login />
+            </>
+          }
+        />
+        <Route
+          path="/mapTest"
+          element={
+            <>
+              <PageTitle title="Map Test | Field Force Management" />
+              <MapTest />
             </>
           }
         />

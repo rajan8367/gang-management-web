@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
-import L from "leaflet";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import { useUserContext } from "../../hooks/userContext";
 import { apiUrl } from "../../Constant";
 import Loader from "../../Component/Loader";
 import Swal from "sweetalert2"; // SweetAlert2
@@ -15,20 +13,8 @@ import {
   Marker,
   InfoWindow,
 } from "@vis.gl/react-google-maps";
-import GoogleMap from "../../Component/Map";
-
-// Custom map marker icon
-const customIcon = L.icon({
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  shadowSize: [41, 41],
-});
 
 function ComplaintInfo() {
-  const { token } = useUserContext();
   const { complaintId } = useParams();
   const [showLoader, setShowLoader] = useState(false);
   const [complaintData, setComplaintData] = useState(null);
@@ -167,20 +153,10 @@ function ComplaintInfo() {
   if (error) {
     return <p className="text-danger">{error}</p>;
   }
-  const handleDragEnd = (event) => {
-    const newLat = event.latLng.lat();
-    const newLng = event.latLng.lng();
-    console.log("Marker released at:", newLat, newLng);
-    setComplaintData((prev) => ({
-      ...prev,
-      consumerLat: newLat,
-      consumerLon: newLng,
-    }));
-  };
+
   return (
     <div className="container-fluid mt-2">
       <div className="row">
-        {/* Right Panel */}
         <div
           className="col-md-8 order-1 order-md-2"
           style={{
@@ -211,7 +187,6 @@ function ComplaintInfo() {
                   : "Complaint Location Map"}
               </h5>
             </div>
-
             <div
               className="card-body"
               style={{

@@ -85,10 +85,17 @@ function Dashboard() {
   };
 
   function formatDate(dateString) {
-    // Parse the date string using Moment.js
-    const date = moment(dateString);
-    // Format the date
-    return date.format("DD MMM YY");
+    const date = new Date(dateString);
+
+    // Format the date in UTC
+    const formattedDate = `${String(date.getUTCDate()).padStart(
+      2,
+      "0"
+    )} ${String(date.getUTCMonth() + 1).padStart(
+      2,
+      "0"
+    )} ${date.getUTCFullYear()}`;
+    return formattedDate;
   }
   const fetchGangCategory = () => {
     setShowLoader(true);
@@ -910,11 +917,7 @@ function Dashboard() {
                                     className="counter-value"
                                     data-target="559"
                                   >
-                                    {count &&
-                                      Object.values(count).reduce(
-                                        (acc, value) => acc + value,
-                                        0
-                                      )}
+                                    {count?.open + count?.esclate}
                                   </span>{" "}
                                 </h4>
                               </div>
@@ -1122,7 +1125,12 @@ function Dashboard() {
                                           complaint?.remarks}
                                       </td>
                                     )}
-                                    <td className="text-nowrap">
+                                    <td
+                                      style={{
+                                        wordBreak: "break-word",
+                                        width: "134px",
+                                      }}
+                                    >
                                       {(complaint?.consumerLat &&
                                         complaint?.consumerLon &&
                                         complaint.complaintStatus === "Open") ||
